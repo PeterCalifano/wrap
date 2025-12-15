@@ -176,12 +176,12 @@ mxArray* wrap<int>(const int& value) {
 }
 
 // specialization to gtsam::Key which is an alias for uint64_t
-template<>
-mxArray* wrap<uint64_t>(const uint64_t& value) {
-  mxArray *result = scalar(mxUINT32OR64_CLASS);
-  *(uint64_t*)mxGetData(result) = value;
-  return result;
-}
+//template<>
+//mxArray* wrap<uint64_t>(const uint64_t& value) {
+//  mxArray *result = scalar(mxUINT32OR64_CLASS);
+//  *(uint64_t*)mxGetData(result) = value;
+//  return result;
+//}
 
 // specialization to double -> just double
 template<>
@@ -339,11 +339,11 @@ int unwrap<int>(const mxArray* array) {
 }
 
 // specialization to gtsam::Key which is an alias for uint64_t
-template<>
-uint64_t unwrap<uint64_t>(const mxArray* array) {
-  checkScalar(array,"unwrap<uint64_t>");
-  return myGetScalar<uint64_t>(array);
-}
+//template<>
+//uint64_t unwrap<uint64_t>(const mxArray* array) {
+//  checkScalar(array,"unwrap<uint64_t>");
+//  return myGetScalar<uint64_t>(array);
+//}
 
 // specialization to size_t
 template<>
