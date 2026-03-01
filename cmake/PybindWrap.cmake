@@ -63,6 +63,17 @@ function(
     set(GTWRAP_PATH_SEPARATOR ";")
   endif()
 
+  set(_wrap_generated_cpp_dir "")
+  if(DEFINED GTWRAP_PYTHON_GENERATED_CPP_DIR AND
+     NOT "${GTWRAP_PYTHON_GENERATED_CPP_DIR}" STREQUAL "")
+    if(IS_ABSOLUTE "${GTWRAP_PYTHON_GENERATED_CPP_DIR}")
+      set(_wrap_generated_cpp_dir "${GTWRAP_PYTHON_GENERATED_CPP_DIR}")
+    else()
+      set(_wrap_generated_cpp_dir "${CMAKE_CURRENT_BINARY_DIR}/${GTWRAP_PYTHON_GENERATED_CPP_DIR}")
+    endif()
+    file(MAKE_DIRECTORY "${_wrap_generated_cpp_dir}")
+  endif()
+
   # Create a copy of interface_headers so we can freely manipulate it
   set(interface_files ${interface_headers})
 
@@ -73,40 +84,74 @@ function(
   foreach(interface_file ${interface_files})
     # This block gets the interface file name and does the replacement
     get_filename_component(interface ${interface_file} NAME_WLE)
-    set(cpp_file "${interface}.cpp")
+    set(_submodule_generated_cpp "${interface}.cpp")
+    set(cpp_file "${_submodule_generated_cpp}")
+    if(NOT "${_wrap_generated_cpp_dir}" STREQUAL "")
+      set(cpp_file "${_wrap_generated_cpp_dir}/${cpp_file}")
+    endif()
     list(APPEND cpp_files ${cpp_file})
+
+    set(_submodule_generated_cpp_abs "${_submodule_generated_cpp}")
+    if(NOT IS_ABSOLUTE "${_submodule_generated_cpp_abs}")
+      set(_submodule_generated_cpp_abs "${CMAKE_CURRENT_BINARY_DIR}/${_submodule_generated_cpp_abs}")
+    endif()
+    set(_submodule_expected_cpp_abs "${cpp_file}")
+    if(NOT IS_ABSOLUTE "${_submodule_expected_cpp_abs}")
+      set(_submodule_expected_cpp_abs "${CMAKE_CURRENT_BINARY_DIR}/${_submodule_expected_cpp_abs}")
+    endif()
 
     # Wrap the specific interface header
     # This is done so that we can create CMake dependencies in such a way so that when changing a single .i file,
     # the others don't need to be regenerated.
     # NOTE: We have to use `add_custom_command` so set the dependencies correctly.
     # https://stackoverflow.com/questions/40032593/cmake-does-not-rebuild-dependent-after-prerequisite-changes
-    add_custom_command(
-      OUTPUT ${cpp_file}
-      COMMAND
-        ${CMAKE_COMMAND} -E env
-        "PYTHONPATH=${GTWRAP_PACKAGE_DIR}${GTWRAP_PATH_SEPARATOR}$ENV{PYTHONPATH}"
-        ${PYTHON_EXECUTABLE} ${PYBIND_WRAP_SCRIPT} --src "${interface_file}"
-          --out "${cpp_file}"  --module_name ${module_name}
-          --top_module_namespaces "${top_namespace}" --ignore ${ignore_classes}
-          --template ${module_template} --is_submodule ${_WRAP_BOOST_ARG}
-          --xml_source "${GTWRAP_PYTHON_DOCS_SOURCE}"
-      DEPENDS "${interface_file}" ${module_template} "${module_name}/specializations/${interface}.h" "${module_name}/preamble/${interface}.h"
-      VERBATIM)
+    if(NOT "${_submodule_generated_cpp_abs}" STREQUAL "${_submodule_expected_cpp_abs}")
+      add_custom_command(
+        OUTPUT ${cpp_file}
+        COMMAND
+          ${CMAKE_COMMAND} -E env
+          "PYTHONPATH=${GTWRAP_PACKAGE_DIR}${GTWRAP_PATH_SEPARATOR}$ENV{PYTHONPATH}"
+          ${PYTHON_EXECUTABLE} ${PYBIND_WRAP_SCRIPT} --src "${interface_file}"
+            --out "${cpp_file}"  --module_name ${module_name}
+            --top_module_namespaces "${top_namespace}" --ignore ${ignore_classes}
+            --template ${module_template} --is_submodule ${_WRAP_BOOST_ARG}
+            --xml_source "${GTWRAP_PYTHON_DOCS_SOURCE}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_submodule_generated_cpp_abs}" "${_submodule_expected_cpp_abs}"
+        COMMAND ${CMAKE_COMMAND} -E rm -f "${_submodule_generated_cpp_abs}"
+        DEPENDS "${interface_file}" ${module_template} "${module_name}/specializations/${interface}.h" "${module_name}/preamble/${interface}.h"
+        VERBATIM)
+    else()
+      add_custom_command(
+        OUTPUT ${cpp_file}
+        COMMAND
+          ${CMAKE_COMMAND} -E env
+          "PYTHONPATH=${GTWRAP_PACKAGE_DIR}${GTWRAP_PATH_SEPARATOR}$ENV{PYTHONPATH}"
+          ${PYTHON_EXECUTABLE} ${PYBIND_WRAP_SCRIPT} --src "${interface_file}"
+            --out "${cpp_file}"  --module_name ${module_name}
+            --top_module_namespaces "${top_namespace}" --ignore ${ignore_classes}
+            --template ${module_template} --is_submodule ${_WRAP_BOOST_ARG}
+            --xml_source "${GTWRAP_PYTHON_DOCS_SOURCE}"
+        DEPENDS "${interface_file}" ${module_template} "${module_name}/specializations/${interface}.h" "${module_name}/preamble/${interface}.h"
+        VERBATIM)
+    endif()
 
   endforeach()
 
   get_filename_component(main_interface_name ${main_interface} NAME_WLE)
-  set(main_cpp_file "${main_interface_name}.cpp")
+  set(main_cpp_file "${generated_cpp}")
+  if(NOT "${_wrap_generated_cpp_dir}" STREQUAL "" AND
+     NOT IS_ABSOLUTE "${main_cpp_file}")
+    set(main_cpp_file "${_wrap_generated_cpp_dir}/${main_cpp_file}")
+  endif()
   list(PREPEND cpp_files ${main_cpp_file})
 
   add_custom_command(
-    OUTPUT ${main_cpp_file}
+    OUTPUT "${main_cpp_file}"
     COMMAND
       ${CMAKE_COMMAND} -E env
       "PYTHONPATH=${GTWRAP_PACKAGE_DIR}${GTWRAP_PATH_SEPARATOR}$ENV{PYTHONPATH}"
       ${PYTHON_EXECUTABLE} ${PYBIND_WRAP_SCRIPT} --src "${interface_headers}"
-      --out "${generated_cpp}" --module_name ${module_name}
+      --out "${main_cpp_file}" --module_name ${module_name}
       --top_module_namespaces "${top_namespace}" --ignore ${ignore_classes}
       --template ${module_template} ${_WRAP_BOOST_ARG}
       --xml_source "${GTWRAP_PYTHON_DOCS_SOURCE}"
