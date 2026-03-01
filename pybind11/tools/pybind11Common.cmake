@@ -1,3 +1,4 @@
+include_guard(GLOBAL)
 #[======================================================[.rst
 
 Adds the following targets::

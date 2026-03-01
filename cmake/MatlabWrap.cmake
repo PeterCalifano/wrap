@@ -239,18 +239,18 @@ function(wrap_library_internal interfaceHeader moduleName linkLibraries extraInc
     set(_BOOST_SERIALIZATION "")
   endif(use_boost_serialization)
 
-  add_custom_command(
-    OUTPUT ${generated_cpp_file}
-    DEPENDS ${interfaceHeader} ${module_library_target} ${otherLibraryTargets}
-            ${otherSourcesAndObjects}
-    COMMAND
-      ${CMAKE_COMMAND} -E env
-      "PYTHONPATH=${GTWRAP_PACKAGE_DIR}${GTWRAP_PATH_SEPARATOR}$ENV{PYTHONPATH}"
-      ${PYTHON_EXECUTABLE} ${MATLAB_WRAP_SCRIPT} --src "${interfaceHeader}"
-      --module_name ${moduleName} --out ${generated_files_path}
-      --top_module_namespaces ${moduleName} --ignore ${ignore_classes} ${_BOOST_SERIALIZATION}
-    VERBATIM
-    WORKING_DIRECTORY ${generated_files_path})
+  add_custom_command(OUTPUT ${generated_cpp_file}
+                    DEPENDS ${interfaceHeader} ${module_library_target} ${otherLibraryTargets}
+                            ${otherSourcesAndObjects}
+                    COMMAND ${CMAKE_COMMAND} -E env
+                      "PYTHONPATH=${GTWRAP_PACKAGE_DIR}${GTWRAP_PATH_SEPARATOR}$ENV{PYTHONPATH}"
+                      ${PYTHON_EXECUTABLE} ${MATLAB_WRAP_SCRIPT} 
+                      --src "${interfaceHeader}"
+                      --module_name ${moduleName} --out ${generated_files_path}
+                      --top_module_namespaces ${moduleName} --ignore ${ignore_classes} ${_BOOST_SERIALIZATION}
+                    VERBATIM
+                    WORKING_DIRECTORY ${generated_files_path}
+                  )
 
   # Set up building of mex module
   string(REPLACE ";" " " extraMexFlagsSpaced "${extraMexFlags}")
