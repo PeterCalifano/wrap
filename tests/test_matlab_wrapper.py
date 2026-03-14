@@ -9,11 +9,14 @@ import filecmp
 import os
 import os.path as osp
 import sys
+import tempfile
 import unittest
+from unittest import mock
 
 sys.path.append(osp.dirname(osp.dirname(osp.abspath(__file__))))
 
 from gtwrap.matlab_wrapper import MatlabWrapper
+from gtwrap.matlab_wrapper import wrapper as matlab_wrapper_module
 
 
 class TestWrap(unittest.TestCase):
@@ -54,6 +57,40 @@ class TestWrap(unittest.TestCase):
         if not success:
             os.system(f"diff {actual} {expected}")
         self.assertTrue(success, f"Mismatch for file {file}")
+
+    def _make_fallback_template_root(self, root_name: str, create_matlab_header: bool) -> str:
+        wrap_root = osp.join(self.MATLAB_ACTUAL_DIR, root_name)
+        os.makedirs(osp.join(wrap_root, "gtwrap", "matlab_wrapper"), exist_ok=True)
+        os.makedirs(osp.join(wrap_root, "templates"), exist_ok=True)
+
+        template_path = osp.join(wrap_root, "templates", "matlab_wrapper.tpl.in")
+        with open(template_path, "w", encoding="UTF-8") as tpl:
+            tpl.write("#include <${GTWRAP_INCLUDE_NAME}/matlab.h>\n#include <map>\n")
+
+        if create_matlab_header:
+            with open(osp.join(wrap_root, "matlab.h"), "w", encoding="UTF-8") as matlab_h:
+                matlab_h.write("// test header\n")
+
+        wrapper_path = osp.join(wrap_root, "gtwrap", "matlab_wrapper", "wrapper.py")
+        with open(wrapper_path, "w", encoding="UTF-8") as wrapper_file:
+            wrapper_file.write("# test wrapper path\n")
+
+        return wrapper_path
+
+    def test_template_loader_falls_back_to_tpl_in(self):
+        with tempfile.TemporaryDirectory(dir=self.MATLAB_ACTUAL_DIR) as temp_dir:
+            install_wrapper_path = self._make_fallback_template_root(
+                osp.join(osp.basename(temp_dir), "gtwrap_install"), False)
+            local_wrapper_path = self._make_fallback_template_root(
+                osp.join(osp.basename(temp_dir), "wrap"), True)
+
+            with mock.patch.object(matlab_wrapper_module, "__file__", install_wrapper_path):
+                install_headers = MatlabWrapper._load_wrapper_file_headers()
+            self.assertEqual(install_headers.splitlines()[0], "#include <gtwrap/matlab.h>")
+
+            with mock.patch.object(matlab_wrapper_module, "__file__", local_wrapper_path):
+                local_headers = MatlabWrapper._load_wrapper_file_headers()
+            self.assertEqual(local_headers.splitlines()[0], "#include <wrap/matlab.h>")
 
     def test_geometry(self):
         """

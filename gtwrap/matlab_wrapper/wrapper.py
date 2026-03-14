@@ -89,10 +89,35 @@ class MatlabWrapper(CheckMixin, FormatMixin):
         # Files and their content
         self.content: List[str] = []
 
-        # Ensure the template file is always picked up from the correct directory.
+        self.wrapper_file_headers = self._load_wrapper_file_headers()
+
+    @staticmethod
+    def _load_wrapper_file_headers() -> str:
+        """Load the configured MATLAB wrapper template or fall back to the source template."""
         dir_path = osp.dirname(osp.realpath(__file__))
-        with open(osp.join(dir_path, "matlab_wrapper.tpl")) as f:
-            self.wrapper_file_headers = f.read()
+        # Check for pre-configured matlab_template.tpl file
+        configured_template_path = osp.join(dir_path, "matlab_wrapper.tpl")
+        if osp.exists(configured_template_path):
+            with open(configured_template_path, encoding="UTF-8") as f:
+                return f.read() # Return if present
+
+        # If no pre-configured available, then search for template file to configure
+        wrap_root = osp.dirname(osp.dirname(dir_path))
+        template_in_path = osp.join(wrap_root, "templates", "matlab_wrapper.tpl.in")
+
+        if not osp.exists(template_in_path):
+            raise FileNotFoundError(
+                f"Could not find MATLAB wrapper template at '{configured_template_path}' "
+                f"or fallback source template '{template_in_path}'.") # Fail if not existing
+
+        # If template found, write required tpl file directly
+        include_name = "gtwrap"
+        matlab_header_path = osp.join(wrap_root, "matlab.h")
+        if osp.exists(matlab_header_path):
+            include_name = osp.basename(wrap_root)
+
+        with open(template_in_path, encoding="UTF-8") as f:
+            return f.read().replace("${GTWRAP_INCLUDE_NAME}", include_name)
 
     def add_class(self, instantiated_class):
         """Add `instantiated_class` to the list of classes."""
