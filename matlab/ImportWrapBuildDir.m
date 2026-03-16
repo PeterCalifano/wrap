@@ -5,6 +5,7 @@ arguments
 end
 arguments
     kwargs.bImportSubPackages    (1,1) logical = false
+    kwargs.bVerbose              (1,1) logical = true
 end
 %% SIGNATURE
 % [charAddPaths] = ImportWrapBuildDir(cellBuildFolders, cellImportNamespaces)
@@ -48,12 +49,17 @@ if isstring(cellImportNamespaces)
     cellImportNamespaces = cellstr(cellImportNamespaces);
 end
 
+if kwargs.bVerbose
+    fprintf('\n[wrap] ImportWrapBuildDir\n');
+end
+
 ui32NumOfPathsToAdd = length(cellBuildFolders);
 ui32NumOfLibsToImport = length(cellImportNamespaces);
 
 % Get absolute paths from relative and check it exists
 for idPath = 1:ui32NumOfPathsToAdd
     charBuildFolder = cellBuildFolders{idPath};
+    charBuildFolderRequested = charBuildFolder;
     try
         mustBeFolder(charBuildFolder); % Ensure folder exists in the first place
     catch
@@ -63,6 +69,11 @@ for idPath = 1:ui32NumOfPathsToAdd
     charPrevDir = cd(charBuildFolder);
     cellBuildFolders{idPath} = pwd;
     cd(charPrevDir);
+
+    if kwargs.bVerbose
+        fprintf('  [%d/%d] build: %s\n', idPath, ui32NumOfPathsToAdd, charBuildFolderRequested);
+        fprintf('         resolved: %s\n', cellBuildFolders{idPath});
+    end
 end
 
 % Loop over each provided build folder
@@ -143,6 +154,10 @@ for idPath = 1:ui32NumOfPathsToAdd
         % Define subdirectories to add
         cellWrap{idPath}    = fullfile(charBuildFolder, "wrap", cellLibraryName{idPath});
 
+        if kwargs.bVerbose
+            fprintf('         repo: %s\n', cellLibraryName{idPath});
+        end
+
         % Search for a target path ending in mex
         charMexFolder = dir(fullfile(charBuildFolder, "wrap", '*_mex'));
         assert(not(isempty(charMexFolder)), sprintf('ERROR: no folder in %s matching pattern: "*_mex". Have you built library with MATLAB wrapper support?', fullfile(charBuildFolder, "wrap")) );
@@ -155,6 +170,9 @@ for idPath = 1:ui32NumOfPathsToAdd
             addpath(cellWrap{idPath});
             idAddCount = idAddCount + 1;
             cellAddedPaths{idAddCount} = cellWrap{idPath};
+            if kwargs.bVerbose
+                fprintf('         added wrap: %s\n', cellWrap{idPath});
+            end
         else
             warning("Folder '%s' not found.", cellWrap{idPath});
         end
@@ -165,6 +183,9 @@ for idPath = 1:ui32NumOfPathsToAdd
             addpath(charWrapMex);
             idAddCount = idAddCount + 1;
             cellAddedPaths{idAddCount} = charWrapMex;
+            if kwargs.bVerbose
+                fprintf('         added mex : %s\n', charWrapMex);
+            end
 
         else
             warning("Folder '%s' not found.", charWrapMex);
@@ -187,6 +208,9 @@ for idImport = 1:ui32NumOfLibsToImport
     try
         % Using eval to dynamically call import
         evalin('caller', sprintf('import %s.*', charImportName));
+        if kwargs.bVerbose
+            fprintf('  imported namespace: %s.*\n', charImportName);
+        end
 
         % Discover and import subpackages if requested
         if kwargs.bImportSubPackages
@@ -205,6 +229,9 @@ for idImport = 1:ui32NumOfLibsToImport
                                           strcat("+", cellSubPackageNames{idSubPack}) ) )
 
                         evalin('caller', sprintf('import %s.%s.*', charImportName, cellSubPackageNames{idSubPack}) );
+                        if kwargs.bVerbose
+                            fprintf('    imported subpackage: %s.%s.*\n', charImportName, cellSubPackageNames{idSubPack});
+                        end
                     end
                 end
             end
@@ -219,6 +246,10 @@ end
 if nargin == 0
     % Default usage for nav-backend
     cd(charCurrentDir)
+end
+
+if kwargs.bVerbose
+    fprintf('[wrap] Imported %d MATLAB path entries from %d build folder(s).\n', idAddCount, ui32NumOfPathsToAdd);
 end
 
 %% LOCAL FUNCTION
