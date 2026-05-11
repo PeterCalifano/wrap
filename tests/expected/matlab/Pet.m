@@ -1,5 +1,4 @@
-%class Pet, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class Pet, generated wrapper class
 %
 %-------Constructors-------
 %Pet(string name, Kind type)
@@ -41,7 +40,7 @@ classdef Pet < handle
     %DISP Calls print on the object
     function varargout = getColor(this, varargin)
       % GETCOLOR usage: getColor() : returns Color
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         varargout{1} = enum_wrapper(3, this, varargin{:});
         return
@@ -51,7 +50,7 @@ classdef Pet < handle
 
     function varargout = setColor(this, varargin)
       % SETCOLOR usage: setColor(Color color) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'Color')
         enum_wrapper(4, this, varargin{:});
         return

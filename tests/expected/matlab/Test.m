@@ -1,5 +1,4 @@
-%class Test, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class Test, generated wrapper class
 %
 %-------Constructors-------
 %Test()
@@ -73,7 +72,7 @@ classdef Test < handle
     %DISP Calls print on the object
     function varargout = arg_EigenConstRef(this, varargin)
       % ARG_EIGENCONSTREF usage: arg_EigenConstRef(Matrix value) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double')
         class_wrapper(16, this, varargin{:});
         return
@@ -83,7 +82,7 @@ classdef Test < handle
 
     function varargout = create_MixedPtrs(this, varargin)
       % CREATE_MIXEDPTRS usage: create_MixedPtrs() : returns pair< Test, Test >
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         [ varargout{1} varargout{2} ] = class_wrapper(17, this, varargin{:});
         return
@@ -93,7 +92,7 @@ classdef Test < handle
 
     function varargout = create_ptrs(this, varargin)
       % CREATE_PTRS usage: create_ptrs() : returns pair< Test, Test >
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         [ varargout{1} varargout{2} ] = class_wrapper(18, this, varargin{:});
         return
@@ -103,7 +102,7 @@ classdef Test < handle
 
     function varargout = get_container(this, varargin)
       % GET_CONTAINER usage: get_container() : returns std.vectorTest
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         varargout{1} = class_wrapper(19, this, varargin{:});
         return
@@ -113,7 +112,7 @@ classdef Test < handle
 
     function varargout = lambda(this, varargin)
       % LAMBDA usage: lambda() : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         class_wrapper(20, this, varargin{:});
         return
@@ -123,13 +122,13 @@ classdef Test < handle
 
     function varargout = markdown(this, varargin)
       % MARKDOWN usage: markdown(KeyFormatter keyFormatter) : returns string
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'gtsam.KeyFormatter')
         varargout{1} = class_wrapper(21, this, varargin{:});
         return
       end
       % MARKDOWN usage: markdown() : returns string
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         varargout{1} = class_wrapper(22, this, varargin{:});
         return
@@ -139,7 +138,7 @@ classdef Test < handle
 
     function varargout = print(this, varargin)
       % PRINT usage: print() : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         class_wrapper(23, this, varargin{:});
         return
@@ -149,7 +148,7 @@ classdef Test < handle
 
     function varargout = push_back(this, varargin)
       % PUSH_BACK usage: push_back(Key key) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'numeric')
         class_wrapper(24, this, varargin{:});
         return
@@ -159,7 +158,7 @@ classdef Test < handle
 
     function varargout = return_Point2Ptr(this, varargin)
       % RETURN_POINT2PTR usage: return_Point2Ptr(bool value) : returns Point2
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'logical')
         varargout{1} = class_wrapper(25, this, varargin{:});
         return
@@ -169,7 +168,7 @@ classdef Test < handle
 
     function varargout = return_Test(this, varargin)
       % RETURN_TEST usage: return_Test(Test value) : returns Test
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'Test')
         varargout{1} = class_wrapper(26, this, varargin{:});
         return
@@ -179,7 +178,7 @@ classdef Test < handle
 
     function varargout = return_TestPtr(this, varargin)
       % RETURN_TESTPTR usage: return_TestPtr(Test value) : returns Test
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'Test')
         varargout{1} = class_wrapper(27, this, varargin{:});
         return
@@ -189,7 +188,7 @@ classdef Test < handle
 
     function varargout = return_bool(this, varargin)
       % RETURN_BOOL usage: return_bool(bool value) : returns bool
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'logical')
         varargout{1} = class_wrapper(28, this, varargin{:});
         return
@@ -199,7 +198,7 @@ classdef Test < handle
 
     function varargout = return_double(this, varargin)
       % RETURN_DOUBLE usage: return_double(double value) : returns double
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double')
         varargout{1} = class_wrapper(29, this, varargin{:});
         return
@@ -209,7 +208,7 @@ classdef Test < handle
 
     function varargout = return_field(this, varargin)
       % RETURN_FIELD usage: return_field(Test t) : returns bool
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'Test')
         varargout{1} = class_wrapper(30, this, varargin{:});
         return
@@ -219,7 +218,7 @@ classdef Test < handle
 
     function varargout = return_int(this, varargin)
       % RETURN_INT usage: return_int(int value) : returns int
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'numeric')
         varargout{1} = class_wrapper(31, this, varargin{:});
         return
@@ -229,7 +228,7 @@ classdef Test < handle
 
     function varargout = return_matrix1(this, varargin)
       % RETURN_MATRIX1 usage: return_matrix1(Matrix value) : returns Matrix
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double')
         varargout{1} = class_wrapper(32, this, varargin{:});
         return
@@ -239,13 +238,13 @@ classdef Test < handle
 
     function varargout = return_matrix2(this, varargin)
       % RETURN_MATRIX2 usage: return_matrix2(Matrix value) : returns Matrix
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double')
         varargout{1} = class_wrapper(33, this, varargin{:});
         return
       end
       % RETURN_MATRIX2 usage: return_matrix2(Matrix value) : returns Matrix
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double')
         varargout{1} = class_wrapper(34, this, varargin{:});
         return
@@ -255,13 +254,13 @@ classdef Test < handle
 
     function varargout = return_pair(this, varargin)
       % RETURN_PAIR usage: return_pair(Vector v, Matrix A) : returns pair< Vector, Matrix >
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 2 && isa(varargin{1},'double') && size(varargin{1},2)==1 && isa(varargin{2},'double')
         [ varargout{1} varargout{2} ] = class_wrapper(35, this, varargin{:});
         return
       end
       % RETURN_PAIR usage: return_pair(Vector v) : returns pair< Vector, Matrix >
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double') && size(varargin{1},2)==1
         [ varargout{1} varargout{2} ] = class_wrapper(36, this, varargin{:});
         return
@@ -271,7 +270,7 @@ classdef Test < handle
 
     function varargout = return_ptrs(this, varargin)
       % RETURN_PTRS usage: return_ptrs(Test p1, Test p2) : returns pair< Test, Test >
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 2 && isa(varargin{1},'Test') && isa(varargin{2},'Test')
         [ varargout{1} varargout{2} ] = class_wrapper(37, this, varargin{:});
         return
@@ -281,7 +280,7 @@ classdef Test < handle
 
     function varargout = return_size_t(this, varargin)
       % RETURN_SIZE_T usage: return_size_t(size_t value) : returns size_t
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'numeric')
         varargout{1} = class_wrapper(38, this, varargin{:});
         return
@@ -291,7 +290,7 @@ classdef Test < handle
 
     function varargout = return_string(this, varargin)
       % RETURN_STRING usage: return_string(string value) : returns string
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'char')
         varargout{1} = class_wrapper(39, this, varargin{:});
         return
@@ -301,7 +300,7 @@ classdef Test < handle
 
     function varargout = return_vector1(this, varargin)
       % RETURN_VECTOR1 usage: return_vector1(Vector value) : returns Vector
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double') && size(varargin{1},2)==1
         varargout{1} = class_wrapper(40, this, varargin{:});
         return
@@ -311,13 +310,13 @@ classdef Test < handle
 
     function varargout = return_vector2(this, varargin)
       % RETURN_VECTOR2 usage: return_vector2(Vector value) : returns Vector
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double') && size(varargin{1},2)==1
         varargout{1} = class_wrapper(41, this, varargin{:});
         return
       end
       % RETURN_VECTOR2 usage: return_vector2(Vector value) : returns Vector
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double') && size(varargin{1},2)==1
         varargout{1} = class_wrapper(42, this, varargin{:});
         return
@@ -327,19 +326,19 @@ classdef Test < handle
 
     function varargout = set_container(this, varargin)
       % SET_CONTAINER usage: set_container(vector<Test> container) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'std.vectorTest')
         class_wrapper(43, this, varargin{:});
         return
       end
       % SET_CONTAINER usage: set_container(vector<Test> container) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'std.vectorTest')
         class_wrapper(44, this, varargin{:});
         return
       end
       % SET_CONTAINER usage: set_container(vector<Test> container) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'std.vectorTest')
         class_wrapper(45, this, varargin{:});
         return

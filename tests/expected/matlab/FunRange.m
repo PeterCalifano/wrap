@@ -1,5 +1,4 @@
-%class FunRange, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class FunRange, generated wrapper class
 %
 %-------Constructors-------
 %FunRange()
@@ -41,7 +40,7 @@ classdef FunRange < handle
     %DISP Calls print on the object
     function varargout = range(this, varargin)
       % RANGE usage: range(double d) : returns FunRange
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double')
         varargout{1} = class_wrapper(3, this, varargin{:});
         return
@@ -54,7 +53,7 @@ classdef FunRange < handle
   methods(Static = true)
     function varargout = create(varargin)
       % CREATE usage: create() : returns FunRange
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         varargout{1} = class_wrapper(4, varargin{:});
         return

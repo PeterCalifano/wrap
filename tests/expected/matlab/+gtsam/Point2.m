@@ -1,5 +1,4 @@
-%class Point2, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class Point2, generated wrapper class
 %
 %-------Constructors-------
 %Point2()
@@ -50,43 +49,43 @@ classdef Point2 < handle
     %DISP Calls print on the object
     function varargout = argChar(this, varargin)
       % ARGCHAR usage: argChar(char a) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'char')
         geometry_wrapper(4, this, varargin{:});
         return
       end
       % ARGCHAR usage: argChar(char a) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'char')
         geometry_wrapper(5, this, varargin{:});
         return
       end
       % ARGCHAR usage: argChar(char a) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'char')
         geometry_wrapper(6, this, varargin{:});
         return
       end
       % ARGCHAR usage: argChar(char a) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'char')
         geometry_wrapper(7, this, varargin{:});
         return
       end
       % ARGCHAR usage: argChar(char a) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'char')
         geometry_wrapper(8, this, varargin{:});
         return
       end
       % ARGCHAR usage: argChar(char a) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'char')
         geometry_wrapper(9, this, varargin{:});
         return
       end
       % ARGCHAR usage: argChar(char a) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'char')
         geometry_wrapper(10, this, varargin{:});
         return
@@ -96,7 +95,7 @@ classdef Point2 < handle
 
     function varargout = argUChar(this, varargin)
       % ARGUCHAR usage: argUChar(unsigned char a) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'unsigned char')
         geometry_wrapper(11, this, varargin{:});
         return
@@ -106,7 +105,7 @@ classdef Point2 < handle
 
     function varargout = dim(this, varargin)
       % DIM usage: dim() : returns int
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         varargout{1} = geometry_wrapper(12, this, varargin{:});
         return
@@ -116,7 +115,7 @@ classdef Point2 < handle
 
     function varargout = eigenArguments(this, varargin)
       % EIGENARGUMENTS usage: eigenArguments(Vector v, Matrix m) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 2 && isa(varargin{1},'double') && size(varargin{1},2)==1 && isa(varargin{2},'double')
         geometry_wrapper(13, this, varargin{:});
         return
@@ -126,7 +125,7 @@ classdef Point2 < handle
 
     function varargout = returnChar(this, varargin)
       % RETURNCHAR usage: returnChar() : returns char
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         varargout{1} = geometry_wrapper(14, this, varargin{:});
         return
@@ -136,7 +135,7 @@ classdef Point2 < handle
 
     function varargout = vectorConfusion(this, varargin)
       % VECTORCONFUSION usage: vectorConfusion() : returns VectorNotEigen
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         varargout{1} = geometry_wrapper(15, this, varargin{:});
         return
@@ -146,7 +145,7 @@ classdef Point2 < handle
 
     function varargout = x(this, varargin)
       % X usage: x() : returns double
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         varargout{1} = geometry_wrapper(16, this, varargin{:});
         return
@@ -156,7 +155,7 @@ classdef Point2 < handle
 
     function varargout = y(this, varargin)
       % Y usage: y() : returns double
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         varargout{1} = geometry_wrapper(17, this, varargin{:});
         return

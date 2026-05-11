@@ -1,5 +1,4 @@
-%class GeneralSFMFactorCal3Bundler, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class GeneralSFMFactorCal3Bundler, generated wrapper class
 %
 %-------Properties-------
 %verbosity

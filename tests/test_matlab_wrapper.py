@@ -5,8 +5,6 @@ Date: March 2019
 """
 # pylint: disable=import-error, wrong-import-position
 
-from gtwrap.matlab_wrapper import wrapper as matlab_wrapper_module
-from gtwrap.matlab_wrapper import MatlabWrapper
 import filecmp
 import os
 import os.path as osp
@@ -16,6 +14,9 @@ import unittest
 from unittest import mock
 
 sys.path.append(osp.dirname(osp.dirname(osp.abspath(__file__))))
+
+from gtwrap.matlab_wrapper import wrapper as matlab_wrapper_module
+from gtwrap.matlab_wrapper import MatlabWrapper
 
 
 class TestWrap(unittest.TestCase):

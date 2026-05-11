@@ -1,5 +1,4 @@
-%class MultipleTemplatesIntFloat, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class MultipleTemplatesIntFloat, generated wrapper class
 %
 classdef MultipleTemplatesIntFloat < handle
   properties

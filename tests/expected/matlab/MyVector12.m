@@ -1,5 +1,4 @@
-%class MyVector12, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class MyVector12, generated wrapper class
 %
 %-------Constructors-------
 %MyVector12()

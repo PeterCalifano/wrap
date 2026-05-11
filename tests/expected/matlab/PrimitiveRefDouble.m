@@ -1,5 +1,4 @@
-%class PrimitiveRefDouble, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class PrimitiveRefDouble, generated wrapper class
 %
 %-------Constructors-------
 %PrimitiveRefDouble()
@@ -41,7 +40,7 @@ classdef PrimitiveRefDouble < handle
   methods(Static = true)
     function varargout = Brutal(varargin)
       % BRUTAL usage: Brutal(double t) : returns PrimitiveRefdouble
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double')
         varargout{1} = class_wrapper(55, varargin{:});
         return

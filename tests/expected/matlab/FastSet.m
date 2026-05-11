@@ -1,5 +1,4 @@
-%class FastSet, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class FastSet, generated wrapper class
 %
 %-------Constructors-------
 %FastSet()
@@ -12,9 +11,9 @@ classdef FastSet < handle
     function obj = FastSet(varargin)
       if nargin == 2 && isa(varargin{1}, 'uint64') && varargin{1} == uint64(5139824614673773682)
         my_ptr = varargin{2};
-        class_wrapper(73, my_ptr);
+        class_wrapper(76, my_ptr);
       elseif nargin == 0
-        my_ptr = class_wrapper(74);
+        my_ptr = class_wrapper(77);
       else
         error('Arguments do not match any overload of FastSet constructor');
       end
@@ -22,7 +21,7 @@ classdef FastSet < handle
     end
 
     function delete(obj)
-      class_wrapper(75, obj.ptr_FastSet);
+      class_wrapper(78, obj.ptr_FastSet);
     end
 
     function display(obj), obj.print(''); end

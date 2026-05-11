@@ -1,5 +1,4 @@
-%class NonlinearFactorGraph, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class NonlinearFactorGraph, generated wrapper class
 %
 %-------Methods-------
 %addPriorPinholeCameraCal3Bundler(size_t key, PinholeCamera<Cal3Bundler> prior, Base noiseModel) : returns void
@@ -29,7 +28,7 @@ classdef NonlinearFactorGraph < handle
     %DISP Calls print on the object
     function varargout = addPriorPinholeCameraCal3Bundler(this, varargin)
       % ADDPRIORPINHOLECAMERACAL3BUNDLER usage: addPriorPinholeCameraCal3Bundler(size_t key, PinholeCamera<Cal3Bundler> prior, Base noiseModel) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 3 && isa(varargin{1},'numeric') && isa(varargin{2},'gtsam.PinholeCameraCal3Bundler') && isa(varargin{3},'gtsam.noiseModel.Base')
         special_cases_wrapper(2, this, varargin{:});
         return

@@ -1,5 +1,4 @@
-%class ForwardKinematics, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class ForwardKinematics, generated wrapper class
 %
 %-------Constructors-------
 %ForwardKinematics(Robot robot, string start_link_name, string end_link_name, Values joint_angles, Pose3 l2Tp)
