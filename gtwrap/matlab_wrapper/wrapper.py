@@ -535,8 +535,7 @@ class MatlabWrapper(CheckMixin, FormatMixin):
         static_methods = instantiated_class.static_methods
 
         comment = textwrap.dedent('''\
-            %class {class_name}, see Doxygen page for details
-            %at https://gtsam.org/doxygen/
+            %class {class_name}, generated wrapper class
         ''').format(class_name=class_name)
 
         if len(ctors) != 0:
@@ -971,7 +970,7 @@ class MatlabWrapper(CheckMixin, FormatMixin):
 
                     method_text += textwrap.dedent("""\
                         {method_args}) : returns {return_type}
-                          % Doxygen can be found at https://gtsam.org/doxygen/
+                          % Documentation can be found in the wrapped project.
                           {check_statement}{spacing}{varargout}{wrapper}({num}, this, varargin{{:}});
                         {end_statement}""").format(
                         method_args=self._wrap_args(overload.args),
@@ -1030,7 +1029,7 @@ class MatlabWrapper(CheckMixin, FormatMixin):
                             """), prefix='')
                 method_text += textwrap.indent(textwrap.dedent('''\
                       % {name_caps} usage: {name_upper_case}({args}) : returns {return_type}
-                      % Doxygen can be found at https://gtsam.org/doxygen/
+                      % Documentation can be found in the wrapped project.
                       {check_statement}{spacing}varargout{{1}} = {wrapper}({id}, varargin{{:}});{end_statement}
                       ''').format(
                     name=''.join(format_name),
