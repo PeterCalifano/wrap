@@ -54,19 +54,19 @@ class WrapperTemplate:
                 for(const StringPair& rtti_matlab: types) {{
                   int fieldId = mxAddField(registry, rtti_matlab.first.c_str());
                   if(fieldId < 0) {{
-                    gtwrap::MexErrMsgTxt("gtsam wrap:  Error indexing RTTI types, inheritance will not work correctly");
+                    gtwrap::MexErrMsgTxt("wrap:  Error indexing RTTI types, inheritance will not work correctly");
                   }}
                   mxArray *matlabName = mxCreateString(rtti_matlab.second.c_str());
                   mxSetFieldByNumber(registry, 0, fieldId, matlabName);
                 }}
                 if(mexPutVariable("global", "gtsamwrap_rttiRegistry", registry) != 0) {{
-                  gtwrap::MexErrMsgTxt("gtsam wrap:  Error indexing RTTI types, inheritance will not work correctly");
+                  gtwrap::MexErrMsgTxt("wrap:  Error indexing RTTI types, inheritance will not work correctly");
                 }}
                 mxDestroyArray(registry);
 
                 mxArray *newAlreadyCreated = mxCreateNumericMatrix(0, 0, mxINT8_CLASS, mxREAL);
                 if(mexPutVariable("global", "gtsam_{module_name}_rttiRegistry_created", newAlreadyCreated) != 0) {{
-                  gtwrap::MexErrMsgTxt("gtsam wrap:  Error indexing RTTI types, inheritance will not work correctly");
+                  gtwrap::MexErrMsgTxt("wrap:  Error indexing RTTI types, inheritance will not work correctly");
                 }}
                 mxDestroyArray(newAlreadyCreated);
               }}
@@ -87,7 +87,7 @@ class WrapperTemplate:
     class_serialize_method = textwrap.dedent('''\
             function varargout = string_serialize(this, varargin)
               % STRING_SERIALIZE usage: string_serialize() : returns string
-              % Doxygen can be found at https://gtsam.org/doxygen/
+              % Documentation can be found in the wrapped project.
               if length(varargin) == 0
                 varargout{{1}} = {wrapper}({wrapper_id}, this, varargin{{:}});
               else
@@ -133,7 +133,7 @@ class WrapperTemplate:
                 switch(id) {{
             {cases}    }}
               }} catch(const std::exception& e) {{
-                gtwrap::MexErrMsgTxt(("Exception from gtsam:\\n" + std::string(e.what()) + "\\n").c_str());
+                gtwrap::MexErrMsgTxt(("Exception from wrapped C++ code:\\n" + std::string(e.what()) + "\\n").c_str());
               }}\n
             }}
         ''')
@@ -148,7 +148,7 @@ class WrapperTemplate:
     matlab_deserialize = textwrap.indent(textwrap.dedent("""\
                 function varargout = string_deserialize(varargin)
                   % STRING_DESERIALIZE usage: string_deserialize() : returns {class_name}
-                  % Doxygen can be found at https://gtsam.org/doxygen/
+                  % Documentation can be found in the wrapped project.
                   if length(varargin) == 1
                     varargout{{1}} = {wrapper}({id}, varargin{{:}});
                   else

@@ -98,7 +98,9 @@ namespace gtwrap {
 
 class CoutRedirect {
  public:
-  CoutRedirect() : outbuf_(std::cout.rdbuf(&mout_)) {
+  CoutRedirect()
+      : outbuf_(std::cout.rdbuf(&mout_)),
+        previous_(activeRedirect()) {
     activeRedirect() = this;
   }
 
@@ -111,13 +113,13 @@ class CoutRedirect {
       std::cout.rdbuf(outbuf_);
       outbuf_ = nullptr;
       if (activeRedirect() == this) {
-        activeRedirect() = nullptr;
+        activeRedirect() = previous_;
       }
     }
   }
 
   static void restoreActive() {
-    if (activeRedirect()) {
+    while (activeRedirect()) {
       activeRedirect()->restore();
     }
   }
@@ -130,6 +132,7 @@ class CoutRedirect {
 
   mstream mout_;
   std::streambuf* outbuf_;
+  CoutRedirect* previous_;
 };
 
 void MexErrMsgTxt(const char* str) {
@@ -532,23 +535,23 @@ mxArray* create_object(const std::string& classname, void *pointer, bool isVirtu
     const mxArray *rttiRegistry = mexGetVariablePtr("global", "gtsamwrap_rttiRegistry");
     if(!rttiRegistry)
       gtwrap::MexErrMsgTxt(
-      "gtsam wrap:  RTTI registry is missing - it could have been cleared from the workspace."
+      "wrap:  RTTI registry is missing - it could have been cleared from the workspace."
       "  You can issue 'clear all' to completely clear the workspace, and next time a wrapped object is"
       " created the RTTI registry will be recreated.");
     const mxArray *derivedNameMx = mxGetField(rttiRegistry, 0, rttiName);
     if(!derivedNameMx)
       gtwrap::MexErrMsgTxt((
-      "gtsam wrap:  The derived class type " + string(rttiName) + " was not found in the RTTI registry.  "
+      "wrap:  The derived class type " + string(rttiName) + " was not found in the RTTI registry.  "
       "Try calling 'clear all' twice consecutively - we have seen things not get unloaded properly the "
       "first time.  If this does not work, this may indicate an inconsistency in your wrap interface file.  "
       "The most likely cause for this is that a base class was marked virtual in the wrap interface "
-      "definition header file for gtsam or for your module, but a derived type was returned by a C++ "
+      "definition header file for your module, but a derived type was returned by a C++ "
       "function and that derived type was not marked virtual (or was not specified in the wrap interface "
       "definition header at all).").c_str());
     size_t strLen = mxGetN(derivedNameMx);
     char *buf = new char[strLen+1];
     if(mxGetString(derivedNameMx, buf, strLen+1))
-      gtwrap::MexErrMsgTxt("gtsam wrap:  Internal error reading RTTI table, try 'clear all' to clear your workspace and reinitialize the toolbox.");
+      gtwrap::MexErrMsgTxt("wrap:  Internal error reading RTTI table, try 'clear all' to clear your workspace and reinitialize the toolbox.");
     derivedClassName = buf;
     input[2] = mxCreateString("void");
     nargin = 3;
