@@ -1,5 +1,4 @@
-%class SmartProjectionRigFactorPinholeCameraCal3_S2, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class SmartProjectionRigFactorPinholeCameraCal3_S2, generated wrapper class
 %
 %-------Methods-------
 %add(PinholeCamera<gtsam::Cal3_S2>::Measurement measured, Key poseKey, size_t cameraId) : returns void
@@ -30,13 +29,13 @@ classdef SmartProjectionRigFactorPinholeCameraCal3_S2 < gtsam.SmartProjectionFac
     %DISP Calls print on the object
     function varargout = add(this, varargin)
       % ADD usage: add(PinholeCamera<gtsam::Cal3_S2>::Measurement measured, Key poseKey, size_t cameraId) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 3 && isa(varargin{1},'gtsam.PinholeCamera<gtsam::Cal3_S2>::Measurement') && isa(varargin{2},'numeric') && isa(varargin{3},'numeric')
         class_wrapper(85, this, varargin{:});
         return
       end
       % ADD usage: add(PinholeCamera<gtsam::Cal3_S2>::Measurement measured, Key poseKey) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 2 && isa(varargin{1},'gtsam.PinholeCamera<gtsam::Cal3_S2>::Measurement') && isa(varargin{2},'numeric')
         class_wrapper(86, this, varargin{:});
         return

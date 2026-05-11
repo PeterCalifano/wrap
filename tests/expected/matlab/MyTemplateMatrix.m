@@ -1,5 +1,4 @@
-%class MyTemplateMatrix, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class MyTemplateMatrix, generated wrapper class
 %
 %-------Constructors-------
 %MyTemplateMatrix()
@@ -56,7 +55,7 @@ classdef MyTemplateMatrix < MyBase
     %DISP Calls print on the object
     function varargout = accept_T(this, varargin)
       % ACCEPT_T usage: accept_T(Matrix value) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double')
         inheritance_wrapper(23, this, varargin{:});
         return
@@ -66,7 +65,7 @@ classdef MyTemplateMatrix < MyBase
 
     function varargout = accept_Tptr(this, varargin)
       % ACCEPT_TPTR usage: accept_Tptr(Matrix value) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double')
         inheritance_wrapper(24, this, varargin{:});
         return
@@ -76,7 +75,7 @@ classdef MyTemplateMatrix < MyBase
 
     function varargout = create_MixedPtrs(this, varargin)
       % CREATE_MIXEDPTRS usage: create_MixedPtrs() : returns pair< Matrix, Matrix >
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         [ varargout{1} varargout{2} ] = inheritance_wrapper(25, this, varargin{:});
         return
@@ -86,7 +85,7 @@ classdef MyTemplateMatrix < MyBase
 
     function varargout = create_ptrs(this, varargin)
       % CREATE_PTRS usage: create_ptrs() : returns pair< Matrix, Matrix >
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         [ varargout{1} varargout{2} ] = inheritance_wrapper(26, this, varargin{:});
         return
@@ -96,7 +95,7 @@ classdef MyTemplateMatrix < MyBase
 
     function varargout = return_T(this, varargin)
       % RETURN_T usage: return_T(Matrix value) : returns Matrix
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double')
         varargout{1} = inheritance_wrapper(27, this, varargin{:});
         return
@@ -106,7 +105,7 @@ classdef MyTemplateMatrix < MyBase
 
     function varargout = return_Tptr(this, varargin)
       % RETURN_TPTR usage: return_Tptr(Matrix value) : returns Matrix
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double')
         varargout{1} = inheritance_wrapper(28, this, varargin{:});
         return
@@ -116,7 +115,7 @@ classdef MyTemplateMatrix < MyBase
 
     function varargout = return_ptrs(this, varargin)
       % RETURN_PTRS usage: return_ptrs(Matrix p1, Matrix p2) : returns pair< Matrix, Matrix >
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 2 && isa(varargin{1},'double') && isa(varargin{2},'double')
         [ varargout{1} varargout{2} ] = inheritance_wrapper(29, this, varargin{:});
         return
@@ -126,7 +125,7 @@ classdef MyTemplateMatrix < MyBase
 
     function varargout = templatedMethodMatrix(this, varargin)
       % TEMPLATEDMETHODMATRIX usage: templatedMethodMatrix(Matrix t) : returns Matrix
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double')
         varargout{1} = inheritance_wrapper(30, this, varargin{:});
         return
@@ -136,7 +135,7 @@ classdef MyTemplateMatrix < MyBase
 
     function varargout = templatedMethodPoint2(this, varargin)
       % TEMPLATEDMETHODPOINT2 usage: templatedMethodPoint2(Point2 t) : returns Point2
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double') && size(varargin{1},1)==2 && size(varargin{1},2)==1
         varargout{1} = inheritance_wrapper(31, this, varargin{:});
         return
@@ -146,7 +145,7 @@ classdef MyTemplateMatrix < MyBase
 
     function varargout = templatedMethodPoint3(this, varargin)
       % TEMPLATEDMETHODPOINT3 usage: templatedMethodPoint3(Point3 t) : returns Point3
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double') && size(varargin{1},1)==3 && size(varargin{1},2)==1
         varargout{1} = inheritance_wrapper(32, this, varargin{:});
         return
@@ -156,7 +155,7 @@ classdef MyTemplateMatrix < MyBase
 
     function varargout = templatedMethodVector(this, varargin)
       % TEMPLATEDMETHODVECTOR usage: templatedMethodVector(Vector t) : returns Vector
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double') && size(varargin{1},2)==1
         varargout{1} = inheritance_wrapper(33, this, varargin{:});
         return
@@ -169,7 +168,7 @@ classdef MyTemplateMatrix < MyBase
   methods(Static = true)
     function varargout = Level(varargin)
       % LEVEL usage: Level(Matrix K) : returns MyTemplateMatrix
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double')
         varargout{1} = inheritance_wrapper(34, varargin{:});
         return

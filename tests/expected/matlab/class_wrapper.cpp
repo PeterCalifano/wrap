@@ -1,4 +1,4 @@
-#include <gtwrap/matlab.h>
+#include <wrap/matlab.h>
 #include <map>
 
 #include <folder/path/to/Test.h>
@@ -44,9 +44,6 @@ static Collector_MyFactorPosePoint2 collector_MyFactorPosePoint2;
 
 void _deleteAllObjects()
 {
-  mstream mout;
-  std::streambuf *outbuf = std::cout.rdbuf(&mout);
-
   bool anyDeleted = false;
   { for(Collector_FunRange::iterator iter = collector_FunRange.begin();
       iter != collector_FunRange.end(); ) {
@@ -134,11 +131,10 @@ void _deleteAllObjects()
   } }
 
   if(anyDeleted)
-    cout <<
+    mexPrintf(
       "WARNING:  Wrap modules with variables in the workspace have been reloaded due to\n"
       "calling destructors, call 'clear all' again if you plan to now recompile a wrap\n"
-      "module, so that your recompiled module is used instead of the old one." << endl;
-  std::cout.rdbuf(outbuf);
+      "module, so that your recompiled module is used instead of the old one.\n");
 }
 
 void _class_RTTIRegister() {
@@ -156,19 +152,19 @@ void _class_RTTIRegister() {
     for(const StringPair& rtti_matlab: types) {
       int fieldId = mxAddField(registry, rtti_matlab.first.c_str());
       if(fieldId < 0) {
-        mexErrMsgTxt("gtsam wrap:  Error indexing RTTI types, inheritance will not work correctly");
+        gtwrap::MexErrMsgTxt("wrap:  Error indexing RTTI types, inheritance will not work correctly");
       }
       mxArray *matlabName = mxCreateString(rtti_matlab.second.c_str());
       mxSetFieldByNumber(registry, 0, fieldId, matlabName);
     }
     if(mexPutVariable("global", "gtsamwrap_rttiRegistry", registry) != 0) {
-      mexErrMsgTxt("gtsam wrap:  Error indexing RTTI types, inheritance will not work correctly");
+      gtwrap::MexErrMsgTxt("wrap:  Error indexing RTTI types, inheritance will not work correctly");
     }
     mxDestroyArray(registry);
 
     mxArray *newAlreadyCreated = mxCreateNumericMatrix(0, 0, mxINT8_CLASS, mxREAL);
     if(mexPutVariable("global", "gtsam_class_rttiRegistry_created", newAlreadyCreated) != 0) {
-      mexErrMsgTxt("gtsam wrap:  Error indexing RTTI types, inheritance will not work correctly");
+      gtwrap::MexErrMsgTxt("wrap:  Error indexing RTTI types, inheritance will not work correctly");
     }
     mxDestroyArray(newAlreadyCreated);
   }
@@ -787,8 +783,8 @@ void ForwardKinematics_constructor_67(int nargout, mxArray *out[], int nargin, c
   typedef std::shared_ptr<ForwardKinematics> Shared;
 
   gtdynamics::Robot& robot = *unwrap_shared_ptr< gtdynamics::Robot >(in[0], "ptr_gtdynamicsRobot");
-  string& start_link_name = *unwrap_shared_ptr< string >(in[1], "ptr_string");
-  string& end_link_name = *unwrap_shared_ptr< string >(in[2], "ptr_string");
+  string start_link_name = unwrap< string >(in[1]);
+  string end_link_name = unwrap< string >(in[2]);
   gtsam::Values& joint_angles = *unwrap_shared_ptr< gtsam::Values >(in[3], "ptr_gtsamValues");
   gtsam::Pose3& l2Tp = *unwrap_shared_ptr< gtsam::Pose3 >(in[4], "ptr_gtsamPose3");
   Shared *self = new Shared(new ForwardKinematics(robot,start_link_name,end_link_name,joint_angles,l2Tp));
@@ -803,8 +799,8 @@ void ForwardKinematics_constructor_68(int nargout, mxArray *out[], int nargin, c
   typedef std::shared_ptr<ForwardKinematics> Shared;
 
   gtdynamics::Robot& robot = *unwrap_shared_ptr< gtdynamics::Robot >(in[0], "ptr_gtdynamicsRobot");
-  string& start_link_name = *unwrap_shared_ptr< string >(in[1], "ptr_string");
-  string& end_link_name = *unwrap_shared_ptr< string >(in[2], "ptr_string");
+  string start_link_name = unwrap< string >(in[1]);
+  string end_link_name = unwrap< string >(in[2]);
   gtsam::Values& joint_angles = *unwrap_shared_ptr< gtsam::Values >(in[3], "ptr_gtsamValues");
   Shared *self = new Shared(new ForwardKinematics(robot,start_link_name,end_link_name,joint_angles,gtsam::Pose3()));
   collector_ForwardKinematics.insert(self);
@@ -850,7 +846,7 @@ void TemplatedConstructor_constructor_72(int nargout, mxArray *out[], int nargin
   mexAtExit(&_deleteAllObjects);
   typedef std::shared_ptr<TemplatedConstructor> Shared;
 
-  string& arg = *unwrap_shared_ptr< string >(in[0], "ptr_string");
+  string arg = unwrap< string >(in[0]);
   Shared *self = new Shared(new TemplatedConstructor(arg));
   collector_TemplatedConstructor.insert(self);
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
@@ -1067,7 +1063,7 @@ void MyFactorPosePoint2_print_90(int nargout, mxArray *out[], int nargin, const 
 {
   checkArguments("print",nargout,nargin-1,2);
   auto obj = unwrap_shared_ptr<MyFactor<gtsam::Pose2, gtsam::Matrix>>(in[0], "ptr_MyFactorPosePoint2");
-  string& s = *unwrap_shared_ptr< string >(in[1], "ptr_string");
+  string s = unwrap< string >(in[1]);
   gtsam::KeyFormatter& keyFormatter = *unwrap_shared_ptr< gtsam::KeyFormatter >(in[2], "ptr_gtsamKeyFormatter");
   obj->print(s,keyFormatter);
 }
@@ -1076,7 +1072,7 @@ void MyFactorPosePoint2_print_91(int nargout, mxArray *out[], int nargin, const 
 {
   checkArguments("print",nargout,nargin-1,1);
   auto obj = unwrap_shared_ptr<MyFactor<gtsam::Pose2, gtsam::Matrix>>(in[0], "ptr_MyFactorPosePoint2");
-  string& s = *unwrap_shared_ptr< string >(in[1], "ptr_string");
+  string s = unwrap< string >(in[1]);
   obj->print(s,gtsam::DefaultKeyFormatter);
 }
 
@@ -1090,10 +1086,9 @@ void MyFactorPosePoint2_print_92(int nargout, mxArray *out[], int nargin, const 
 
 void mexFunction(int nargout, mxArray *out[], int nargin, const mxArray *in[])
 {
-  mstream mout;
-  std::streambuf *outbuf = std::cout.rdbuf(&mout);
-
   _class_RTTIRegister();
+
+  gtwrap::CoutRedirect coutRedirect;
 
   int id = unwrap<int>(in[0]);
 
@@ -1380,8 +1375,7 @@ void mexFunction(int nargout, mxArray *out[], int nargin, const mxArray *in[])
       break;
     }
   } catch(const std::exception& e) {
-    mexErrMsgTxt(("Exception from gtsam:\n" + std::string(e.what()) + "\n").c_str());
+    gtwrap::MexErrMsgTxt(("Exception from wrapped C++ code:\n" + std::string(e.what()) + "\n").c_str());
   }
 
-  std::cout.rdbuf(outbuf);
 }

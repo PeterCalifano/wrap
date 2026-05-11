@@ -1,5 +1,4 @@
-%class SfmTrack, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class SfmTrack, generated wrapper class
 %
 %-------Properties-------
 %measurements

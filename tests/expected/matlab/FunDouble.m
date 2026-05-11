@@ -1,5 +1,4 @@
-%class FunDouble, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class FunDouble, generated wrapper class
 %
 %-------Methods-------
 %multiTemplatedMethodStringSize_t(double d, string t, size_t u) : returns Fun<double>
@@ -39,7 +38,7 @@ classdef FunDouble < handle
     %DISP Calls print on the object
     function varargout = multiTemplatedMethodStringSize_t(this, varargin)
       % MULTITEMPLATEDMETHODSTRINGSIZE_T usage: multiTemplatedMethodStringSize_t(double d, string t, size_t u) : returns Fun<double>
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 3 && isa(varargin{1},'double') && isa(varargin{2},'char') && isa(varargin{3},'numeric')
         varargout{1} = class_wrapper(7, this, varargin{:});
         return
@@ -49,7 +48,7 @@ classdef FunDouble < handle
 
     function varargout = sets(this, varargin)
       % SETS usage: sets() : returns std.mapdoubledouble
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         varargout{1} = class_wrapper(8, this, varargin{:});
         return
@@ -59,7 +58,7 @@ classdef FunDouble < handle
 
     function varargout = templatedMethodString(this, varargin)
       % TEMPLATEDMETHODSTRING usage: templatedMethodString(double d, string t) : returns Fun<double>
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 2 && isa(varargin{1},'double') && isa(varargin{2},'char')
         varargout{1} = class_wrapper(9, this, varargin{:});
         return
@@ -72,7 +71,7 @@ classdef FunDouble < handle
   methods(Static = true)
     function varargout = staticMethodWithThis(varargin)
       % STATICMETHODWITHTHIS usage: staticMethodWithThis() : returns Fundouble
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         varargout{1} = class_wrapper(10, varargin{:});
         return
@@ -83,7 +82,7 @@ classdef FunDouble < handle
 
     function varargout = templatedStaticMethodInt(varargin)
       % TEMPLATEDSTATICMETHODINT usage: templatedStaticMethodInt(int m) : returns double
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'numeric')
         varargout{1} = class_wrapper(11, varargin{:});
         return

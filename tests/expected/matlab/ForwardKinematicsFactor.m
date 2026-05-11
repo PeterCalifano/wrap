@@ -1,5 +1,4 @@
-%class ForwardKinematicsFactor, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class ForwardKinematicsFactor, generated wrapper class
 %
 classdef ForwardKinematicsFactor < gtsam.BetweenFactor<gtsam.Pose3>
   properties

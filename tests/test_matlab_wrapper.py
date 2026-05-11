@@ -15,8 +15,8 @@ from unittest import mock
 
 sys.path.append(osp.dirname(osp.dirname(osp.abspath(__file__))))
 
-from gtwrap.matlab_wrapper import MatlabWrapper
 from gtwrap.matlab_wrapper import wrapper as matlab_wrapper_module
+from gtwrap.matlab_wrapper import MatlabWrapper
 
 
 class TestWrap(unittest.TestCase):
@@ -60,18 +60,22 @@ class TestWrap(unittest.TestCase):
 
     def _make_fallback_template_root(self, root_name: str, create_matlab_header: bool) -> str:
         wrap_root = osp.join(self.MATLAB_ACTUAL_DIR, root_name)
-        os.makedirs(osp.join(wrap_root, "gtwrap", "matlab_wrapper"), exist_ok=True)
+        os.makedirs(osp.join(wrap_root, "gtwrap",
+                    "matlab_wrapper"), exist_ok=True)
         os.makedirs(osp.join(wrap_root, "templates"), exist_ok=True)
 
-        template_path = osp.join(wrap_root, "templates", "matlab_wrapper.tpl.in")
+        template_path = osp.join(
+            wrap_root, "templates", "matlab_wrapper.tpl.in")
         with open(template_path, "w", encoding="UTF-8") as tpl:
-            tpl.write("#include <${GTWRAP_INCLUDE_NAME}/matlab.h>\n#include <map>\n")
+            tpl.write(
+                "#include <${GTWRAP_INCLUDE_NAME}/matlab.h>\n#include <map>\n")
 
         if create_matlab_header:
             with open(osp.join(wrap_root, "matlab.h"), "w", encoding="UTF-8") as matlab_h:
                 matlab_h.write("// test header\n")
 
-        wrapper_path = osp.join(wrap_root, "gtwrap", "matlab_wrapper", "wrapper.py")
+        wrapper_path = osp.join(wrap_root, "gtwrap",
+                                "matlab_wrapper", "wrapper.py")
         with open(wrapper_path, "w", encoding="UTF-8") as wrapper_file:
             wrapper_file.write("# test wrapper path\n")
 
@@ -86,11 +90,13 @@ class TestWrap(unittest.TestCase):
 
             with mock.patch.object(matlab_wrapper_module, "__file__", install_wrapper_path):
                 install_headers = MatlabWrapper._load_wrapper_file_headers()
-            self.assertEqual(install_headers.splitlines()[0], "#include <gtwrap/matlab.h>")
+            self.assertEqual(install_headers.splitlines()[
+                             0], "#include <gtwrap/matlab.h>")
 
             with mock.patch.object(matlab_wrapper_module, "__file__", local_wrapper_path):
                 local_headers = MatlabWrapper._load_wrapper_file_headers()
-            self.assertEqual(local_headers.splitlines()[0], "#include <wrap/matlab.h>")
+            self.assertEqual(local_headers.splitlines()[
+                             0], "#include <wrap/matlab.h>")
 
     def test_geometry(self):
         """
@@ -341,6 +347,58 @@ class TestWrap(unittest.TestCase):
         for file in files:
             actual = osp.join(self.MATLAB_ACTUAL_DIR, file)
             self.compare_and_diff(file, actual)
+
+    def test_scalar_string_and_fixed_width_integer_contracts(self):
+        """Check MATLAB scalar generation for strings and fixed-width integers."""
+        file = osp.join(self.INTERFACE_DIR, 'matlab_scalar_contracts.i')
+
+        wrapper = MatlabWrapper(
+            module_name='matlab_scalar_contracts',
+            top_module_namespace=['scalar_contracts'],
+            ignore_classes=[''],
+        )
+        wrapper.wrap([file], path=self.MATLAB_ACTUAL_DIR)
+
+        with open(osp.join(self.MATLAB_ACTUAL_DIR,
+                           'matlab_scalar_contracts_wrapper.cpp'),
+                  encoding="UTF-8") as wrapper_file:
+            wrapper_cpp = wrapper_file.read()
+        with open(osp.join(self.MATLAB_ACTUAL_DIR, '+scalar_contracts',
+                           'ScalarContract.m'),
+                  encoding="UTF-8") as class_file:
+            class_m = class_file.read()
+        with open(osp.join(self.MATLAB_ACTUAL_DIR, '+scalar_contracts',
+                           'GlobalUint32.m'),
+                  encoding="UTF-8") as global_file:
+            global_m = global_file.read()
+
+        self.assertNotIn('unwrap_shared_ptr< string >', wrapper_cpp)
+        self.assertNotIn('unwrap_shared_ptr< uint32_t >', wrapper_cpp)
+        self.assertNotIn('unwrap_shared_ptr< std::uint32_t >', wrapper_cpp)
+        self.assertIn('string value = unwrap< string >(in[1]);', wrapper_cpp)
+        self.assertIn('uint32_t value = unwrap< uint32_t >(in[1]);',
+                      wrapper_cpp)
+        self.assertIn('std::uint32_t value = unwrap< std::uint32_t >(in[1]);',
+                      wrapper_cpp)
+        self.assertIn('out[0] = wrap< uint32_t >', wrapper_cpp)
+        self.assertIn("isa(varargin{1},'uint32')", class_m)
+        self.assertIn("isa(varargin{1},'uint32')", global_m)
+        self.assertNotIn("'uint32_t'", class_m)
+        self.assertNotIn("'std.uint32_t'", class_m)
+
+    def test_non_const_string_ref_is_rejected(self):
+        """Reject mutable string references instead of generating lossy wrappers."""
+        file = osp.join(self.INTERFACE_DIR, 'matlab_invalid_string_ref.i')
+
+        wrapper = MatlabWrapper(
+            module_name='matlab_invalid_string_ref',
+            top_module_namespace=['scalar_contracts'],
+            ignore_classes=[''],
+        )
+
+        with self.assertRaisesRegex(ValueError,
+                                    'Non-const string references'):
+            wrapper.wrap([file], path=self.MATLAB_ACTUAL_DIR)
 
 
 if __name__ == '__main__':

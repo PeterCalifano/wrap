@@ -1,5 +1,4 @@
-%class TemplatedConstructor, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class TemplatedConstructor, generated wrapper class
 %
 %-------Constructors-------
 %TemplatedConstructor()

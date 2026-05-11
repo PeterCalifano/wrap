@@ -222,8 +222,14 @@ function(wrap_library_internal interfaceHeader moduleName linkLibraries extraInc
   # Set up generation of module source file
   file(MAKE_DIRECTORY "${generated_files_path}")
 
-  find_package(PythonInterp ${WRAP_PYTHON_VERSION} EXACT)
-  find_package(PythonLibs ${WRAP_PYTHON_VERSION} EXACT)
+  if(NOT PYTHON_EXECUTABLE)
+    if(WRAP_PYTHON_VERSION AND NOT WRAP_PYTHON_VERSION STREQUAL "Default")
+      find_package(Python ${WRAP_PYTHON_VERSION} EXACT COMPONENTS Interpreter REQUIRED)
+    else()
+      find_package(Python COMPONENTS Interpreter REQUIRED)
+    endif()
+    set(PYTHON_EXECUTABLE "${Python_EXECUTABLE}" CACHE PATH "Python interpreter for gtwrap code generation")
+  endif()
 
   # Set the path separator for PYTHONPATH
   if(UNIX)

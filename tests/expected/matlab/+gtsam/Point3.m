@@ -1,5 +1,4 @@
-%class Point3, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class Point3, generated wrapper class
 %
 %-------Constructors-------
 %Point3(double x, double y, double z)
@@ -42,7 +41,7 @@ classdef Point3 < handle
     %DISP Calls print on the object
     function varargout = norm(this, varargin)
       % NORM usage: norm() : returns double
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         varargout{1} = geometry_wrapper(21, this, varargin{:});
         return
@@ -52,7 +51,7 @@ classdef Point3 < handle
 
     function varargout = string_serialize(this, varargin)
       % STRING_SERIALIZE usage: string_serialize() : returns string
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         varargout{1} = geometry_wrapper(22, this, varargin{:});
       else
@@ -69,7 +68,7 @@ classdef Point3 < handle
   methods(Static = true)
     function varargout = StaticFunctionRet(varargin)
       % STATICFUNCTIONRET usage: StaticFunctionRet(double z) : returns Point3
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double')
         varargout{1} = geometry_wrapper(23, varargin{:});
         return
@@ -80,7 +79,7 @@ classdef Point3 < handle
 
     function varargout = staticFunction(varargin)
       % STATICFUNCTION usage: staticFunction() : returns double
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         varargout{1} = geometry_wrapper(24, varargin{:});
         return
@@ -91,7 +90,7 @@ classdef Point3 < handle
 
     function varargout = string_deserialize(varargin)
       % STRING_DESERIALIZE usage: string_deserialize() : returns gtsam.Point3
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1
         varargout{1} = geometry_wrapper(25, varargin{:});
       else

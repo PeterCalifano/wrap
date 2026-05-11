@@ -1,5 +1,4 @@
-%class MultipleTemplatesIntDouble, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class MultipleTemplatesIntDouble, generated wrapper class
 %
 classdef MultipleTemplatesIntDouble < handle
   properties

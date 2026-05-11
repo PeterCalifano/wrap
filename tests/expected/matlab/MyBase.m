@@ -1,5 +1,4 @@
-%class MyBase, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class MyBase, generated wrapper class
 %
 classdef MyBase < handle
   properties

@@ -1,5 +1,4 @@
-%class HessianFactor, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class HessianFactor, generated wrapper class
 %
 %-------Constructors-------
 %HessianFactor(KeyVector js, vector<Matrix> Gs, vector<Vector> gs, double f)

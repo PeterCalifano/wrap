@@ -1,5 +1,4 @@
-%class Values, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class Values, generated wrapper class
 %
 %-------Constructors-------
 %Values()
@@ -38,13 +37,13 @@ classdef Values < handle
     %DISP Calls print on the object
     function varargout = insert(this, varargin)
       % INSERT usage: insert(size_t j, Vector vector) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 2 && isa(varargin{1},'numeric') && isa(varargin{2},'double') && size(varargin{2},2)==1
         namespaces_wrapper(30, this, varargin{:});
         return
       end
       % INSERT usage: insert(size_t j, Matrix matrix) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 2 && isa(varargin{1},'numeric') && isa(varargin{2},'double')
         namespaces_wrapper(31, this, varargin{:});
         return

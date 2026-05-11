@@ -1,5 +1,4 @@
-%class ScopedTemplateResult, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class ScopedTemplateResult, generated wrapper class
 %
 %-------Constructors-------
 %ScopedTemplateResult(Result::Value arg)

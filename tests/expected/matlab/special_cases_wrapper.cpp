@@ -1,4 +1,4 @@
-#include <gtwrap/matlab.h>
+#include <wrap/matlab.h>
 #include <map>
 
 #include <gtsam/geometry/Cal3Bundler.h>
@@ -18,9 +18,6 @@ static Collector_gtsamGeneralSFMFactorCal3Bundler collector_gtsamGeneralSFMFacto
 
 void _deleteAllObjects()
 {
-  mstream mout;
-  std::streambuf *outbuf = std::cout.rdbuf(&mout);
-
   bool anyDeleted = false;
   { for(Collector_gtsamNonlinearFactorGraph::iterator iter = collector_gtsamNonlinearFactorGraph.begin();
       iter != collector_gtsamNonlinearFactorGraph.end(); ) {
@@ -48,11 +45,10 @@ void _deleteAllObjects()
   } }
 
   if(anyDeleted)
-    cout <<
+    mexPrintf(
       "WARNING:  Wrap modules with variables in the workspace have been reloaded due to\n"
       "calling destructors, call 'clear all' again if you plan to now recompile a wrap\n"
-      "module, so that your recompiled module is used instead of the old one." << endl;
-  std::cout.rdbuf(outbuf);
+      "module, so that your recompiled module is used instead of the old one.\n");
 }
 
 void _special_cases_RTTIRegister() {
@@ -69,19 +65,19 @@ void _special_cases_RTTIRegister() {
     for(const StringPair& rtti_matlab: types) {
       int fieldId = mxAddField(registry, rtti_matlab.first.c_str());
       if(fieldId < 0) {
-        mexErrMsgTxt("gtsam wrap:  Error indexing RTTI types, inheritance will not work correctly");
+        gtwrap::MexErrMsgTxt("wrap:  Error indexing RTTI types, inheritance will not work correctly");
       }
       mxArray *matlabName = mxCreateString(rtti_matlab.second.c_str());
       mxSetFieldByNumber(registry, 0, fieldId, matlabName);
     }
     if(mexPutVariable("global", "gtsamwrap_rttiRegistry", registry) != 0) {
-      mexErrMsgTxt("gtsam wrap:  Error indexing RTTI types, inheritance will not work correctly");
+      gtwrap::MexErrMsgTxt("wrap:  Error indexing RTTI types, inheritance will not work correctly");
     }
     mxDestroyArray(registry);
 
     mxArray *newAlreadyCreated = mxCreateNumericMatrix(0, 0, mxINT8_CLASS, mxREAL);
     if(mexPutVariable("global", "gtsam_special_cases_rttiRegistry_created", newAlreadyCreated) != 0) {
-      mexErrMsgTxt("gtsam wrap:  Error indexing RTTI types, inheritance will not work correctly");
+      gtwrap::MexErrMsgTxt("wrap:  Error indexing RTTI types, inheritance will not work correctly");
     }
     mxDestroyArray(newAlreadyCreated);
   }
@@ -218,10 +214,9 @@ void gtsamGeneralSFMFactorCal3Bundler_set_verbosity_12(int nargout, mxArray *out
 
 void mexFunction(int nargout, mxArray *out[], int nargin, const mxArray *in[])
 {
-  mstream mout;
-  std::streambuf *outbuf = std::cout.rdbuf(&mout);
-
   _special_cases_RTTIRegister();
+
+  gtwrap::CoutRedirect coutRedirect;
 
   int id = unwrap<int>(in[0]);
 
@@ -268,8 +263,7 @@ void mexFunction(int nargout, mxArray *out[], int nargin, const mxArray *in[])
       break;
     }
   } catch(const std::exception& e) {
-    mexErrMsgTxt(("Exception from gtsam:\n" + std::string(e.what()) + "\n").c_str());
+    gtwrap::MexErrMsgTxt(("Exception from wrapped C++ code:\n" + std::string(e.what()) + "\n").c_str());
   }
 
-  std::cout.rdbuf(outbuf);
 }

@@ -1,5 +1,4 @@
-%class Class2, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class Class2, generated wrapper class
 %
 %-------Constructors-------
 %Class2()

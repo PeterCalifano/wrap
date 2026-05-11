@@ -1,5 +1,4 @@
-%class PinholeCameraCal3Bundler, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class PinholeCameraCal3Bundler, generated wrapper class
 %
 classdef PinholeCameraCal3Bundler < handle
   properties

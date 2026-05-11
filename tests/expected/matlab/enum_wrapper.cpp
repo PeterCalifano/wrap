@@ -1,4 +1,4 @@
-#include <gtwrap/matlab.h>
+#include <wrap/matlab.h>
 #include <map>
 
 
@@ -15,9 +15,6 @@ static Collector_gtsamOptimizerGaussNewtonParams collector_gtsamOptimizerGaussNe
 
 void _deleteAllObjects()
 {
-  mstream mout;
-  std::streambuf *outbuf = std::cout.rdbuf(&mout);
-
   bool anyDeleted = false;
   { for(Collector_Pet::iterator iter = collector_Pet.begin();
       iter != collector_Pet.end(); ) {
@@ -39,11 +36,10 @@ void _deleteAllObjects()
   } }
 
   if(anyDeleted)
-    cout <<
+    mexPrintf(
       "WARNING:  Wrap modules with variables in the workspace have been reloaded due to\n"
       "calling destructors, call 'clear all' again if you plan to now recompile a wrap\n"
-      "module, so that your recompiled module is used instead of the old one." << endl;
-  std::cout.rdbuf(outbuf);
+      "module, so that your recompiled module is used instead of the old one.\n");
 }
 
 void _enum_RTTIRegister() {
@@ -60,19 +56,19 @@ void _enum_RTTIRegister() {
     for(const StringPair& rtti_matlab: types) {
       int fieldId = mxAddField(registry, rtti_matlab.first.c_str());
       if(fieldId < 0) {
-        mexErrMsgTxt("gtsam wrap:  Error indexing RTTI types, inheritance will not work correctly");
+        gtwrap::MexErrMsgTxt("wrap:  Error indexing RTTI types, inheritance will not work correctly");
       }
       mxArray *matlabName = mxCreateString(rtti_matlab.second.c_str());
       mxSetFieldByNumber(registry, 0, fieldId, matlabName);
     }
     if(mexPutVariable("global", "gtsamwrap_rttiRegistry", registry) != 0) {
-      mexErrMsgTxt("gtsam wrap:  Error indexing RTTI types, inheritance will not work correctly");
+      gtwrap::MexErrMsgTxt("wrap:  Error indexing RTTI types, inheritance will not work correctly");
     }
     mxDestroyArray(registry);
 
     mxArray *newAlreadyCreated = mxCreateNumericMatrix(0, 0, mxINT8_CLASS, mxREAL);
     if(mexPutVariable("global", "gtsam_enum_rttiRegistry_created", newAlreadyCreated) != 0) {
-      mexErrMsgTxt("gtsam wrap:  Error indexing RTTI types, inheritance will not work correctly");
+      gtwrap::MexErrMsgTxt("wrap:  Error indexing RTTI types, inheritance will not work correctly");
     }
     mxDestroyArray(newAlreadyCreated);
   }
@@ -92,7 +88,7 @@ void Pet_constructor_1(int nargout, mxArray *out[], int nargin, const mxArray *i
   mexAtExit(&_deleteAllObjects);
   typedef std::shared_ptr<Pet> Shared;
 
-  string& name = *unwrap_shared_ptr< string >(in[0], "ptr_string");
+  string name = unwrap< string >(in[0]);
   Pet::Kind type = unwrap_enum<Pet::Kind>(in[1]);
   Shared *self = new Shared(new Pet(name,type));
   collector_Pet.insert(self);
@@ -250,10 +246,9 @@ void gtsamOptimizerGaussNewtonParams_setVerbosity_17(int nargout, mxArray *out[]
 
 void mexFunction(int nargout, mxArray *out[], int nargin, const mxArray *in[])
 {
-  mstream mout;
-  std::streambuf *outbuf = std::cout.rdbuf(&mout);
-
   _enum_RTTIRegister();
+
+  gtwrap::CoutRedirect coutRedirect;
 
   int id = unwrap<int>(in[0]);
 
@@ -315,8 +310,7 @@ void mexFunction(int nargout, mxArray *out[], int nargin, const mxArray *in[])
       break;
     }
   } catch(const std::exception& e) {
-    mexErrMsgTxt(("Exception from gtsam:\n" + std::string(e.what()) + "\n").c_str());
+    gtwrap::MexErrMsgTxt(("Exception from wrapped C++ code:\n" + std::string(e.what()) + "\n").c_str());
   }
 
-  std::cout.rdbuf(outbuf);
 }

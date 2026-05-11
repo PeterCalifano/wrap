@@ -1,4 +1,4 @@
-#include <gtwrap/matlab.h>
+#include <wrap/matlab.h>
 #include <map>
 
 
@@ -9,17 +9,13 @@
 
 void _deleteAllObjects()
 {
-  mstream mout;
-  std::streambuf *outbuf = std::cout.rdbuf(&mout);
-
   bool anyDeleted = false;
 
   if(anyDeleted)
-    cout <<
+    mexPrintf(
       "WARNING:  Wrap modules with variables in the workspace have been reloaded due to\n"
       "calling destructors, call 'clear all' again if you plan to now recompile a wrap\n"
-      "module, so that your recompiled module is used instead of the old one." << endl;
-  std::cout.rdbuf(outbuf);
+      "module, so that your recompiled module is used instead of the old one.\n");
 }
 
 void _functions_RTTIRegister() {
@@ -36,19 +32,19 @@ void _functions_RTTIRegister() {
     for(const StringPair& rtti_matlab: types) {
       int fieldId = mxAddField(registry, rtti_matlab.first.c_str());
       if(fieldId < 0) {
-        mexErrMsgTxt("gtsam wrap:  Error indexing RTTI types, inheritance will not work correctly");
+        gtwrap::MexErrMsgTxt("wrap:  Error indexing RTTI types, inheritance will not work correctly");
       }
       mxArray *matlabName = mxCreateString(rtti_matlab.second.c_str());
       mxSetFieldByNumber(registry, 0, fieldId, matlabName);
     }
     if(mexPutVariable("global", "gtsamwrap_rttiRegistry", registry) != 0) {
-      mexErrMsgTxt("gtsam wrap:  Error indexing RTTI types, inheritance will not work correctly");
+      gtwrap::MexErrMsgTxt("wrap:  Error indexing RTTI types, inheritance will not work correctly");
     }
     mxDestroyArray(registry);
 
     mxArray *newAlreadyCreated = mxCreateNumericMatrix(0, 0, mxINT8_CLASS, mxREAL);
     if(mexPutVariable("global", "gtsam_functions_rttiRegistry_created", newAlreadyCreated) != 0) {
-      mexErrMsgTxt("gtsam wrap:  Error indexing RTTI types, inheritance will not work correctly");
+      gtwrap::MexErrMsgTxt("wrap:  Error indexing RTTI types, inheritance will not work correctly");
     }
     mxDestroyArray(newAlreadyCreated);
   }
@@ -108,7 +104,7 @@ void overloadedGlobalFunction_5(int nargout, mxArray *out[], int nargin, const m
 void MultiTemplatedFunctionStringSize_tDouble_6(int nargout, mxArray *out[], int nargin, const mxArray *in[])
 {
   checkArguments("MultiTemplatedFunctionStringSize_tDouble",nargout,nargin,2);
-  string& x = *unwrap_shared_ptr< string >(in[0], "ptr_string");
+  string x = unwrap< string >(in[0]);
   size_t y = unwrap< size_t >(in[1]);
   out[0] = wrap< double >(MultiTemplatedFunction<string,size_t,double>(x,y));
 }
@@ -140,14 +136,14 @@ void DefaultFuncInt_10(int nargout, mxArray *out[], int nargin, const mxArray *i
 void DefaultFuncString_11(int nargout, mxArray *out[], int nargin, const mxArray *in[])
 {
   checkArguments("DefaultFuncString",nargout,nargin,2);
-  string& s = *unwrap_shared_ptr< string >(in[0], "ptr_string");
-  string& name = *unwrap_shared_ptr< string >(in[1], "ptr_string");
+  string s = unwrap< string >(in[0]);
+  string name = unwrap< string >(in[1]);
   DefaultFuncString(s,name);
 }
 void DefaultFuncString_12(int nargout, mxArray *out[], int nargin, const mxArray *in[])
 {
   checkArguments("DefaultFuncString",nargout,nargin,1);
-  string& s = *unwrap_shared_ptr< string >(in[0], "ptr_string");
+  string s = unwrap< string >(in[0]);
   DefaultFuncString(s,"");
 }
 void DefaultFuncString_13(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -292,10 +288,9 @@ void TemplatedFunctionRot3_32(int nargout, mxArray *out[], int nargin, const mxA
 
 void mexFunction(int nargout, mxArray *out[], int nargin, const mxArray *in[])
 {
-  mstream mout;
-  std::streambuf *outbuf = std::cout.rdbuf(&mout);
-
   _functions_RTTIRegister();
+
+  gtwrap::CoutRedirect coutRedirect;
 
   int id = unwrap<int>(in[0]);
 
@@ -402,8 +397,7 @@ void mexFunction(int nargout, mxArray *out[], int nargin, const mxArray *in[])
       break;
     }
   } catch(const std::exception& e) {
-    mexErrMsgTxt(("Exception from gtsam:\n" + std::string(e.what()) + "\n").c_str());
+    gtwrap::MexErrMsgTxt(("Exception from wrapped C++ code:\n" + std::string(e.what()) + "\n").c_str());
   }
 
-  std::cout.rdbuf(outbuf);
 }

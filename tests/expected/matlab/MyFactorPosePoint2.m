@@ -1,5 +1,4 @@
-%class MyFactorPosePoint2, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class MyFactorPosePoint2, generated wrapper class
 %
 %-------Constructors-------
 %MyFactorPosePoint2(size_t key1, size_t key2, double measured, Base noiseModel)
@@ -34,19 +33,19 @@ classdef MyFactorPosePoint2 < handle
     %DISP Calls print on the object
     function varargout = print(this, varargin)
       % PRINT usage: print(string s, KeyFormatter keyFormatter) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 2 && isa(varargin{1},'char') && isa(varargin{2},'gtsam.KeyFormatter')
         class_wrapper(90, this, varargin{:});
         return
       end
       % PRINT usage: print(string s) : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'char')
         class_wrapper(91, this, varargin{:});
         return
       end
       % PRINT usage: print() : returns void
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 0
         class_wrapper(92, this, varargin{:});
         return
