@@ -1,6 +1,6 @@
 """Mixins for reducing the amount of boilerplate in the main wrapper class."""
 
-from typing import Any, Tuple, Union
+from typing import Any
 
 import gtwrap.interface_parser as parser
 import gtwrap.template_instantiator as instantiator
@@ -8,22 +8,33 @@ import gtwrap.template_instantiator as instantiator
 
 class CheckMixin:
     """Mixin to provide various checks."""
+    fixed_width_integer_types: tuple = (
+        "int8_t",
+        "uint8_t",
+        "int16_t",
+        "uint16_t",
+        "int32_t",
+        "uint32_t",
+        "int64_t",
+        "uint64_t",
+    )
     # Data types that are primitive types
-    not_ptr_type: Tuple = (
+    not_ptr_type: tuple = (
         "int",
         "double",
         "bool",
         "char",
         "unsigned char",
         "size_t",
+        "string",
         "Key",  # This is an alias for a uint64_t
-    )
+    ) + fixed_width_integer_types
     # Ignore the namespace for these datatypes
-    ignore_namespace: Tuple = ('Matrix', 'Vector', 'Point2', 'Point3')
+    ignore_namespace: tuple = ('Matrix', 'Vector', 'Point2', 'Point3')
     # Methods that should be ignored
-    ignore_methods: Tuple = ('pickle', )
+    ignore_methods: tuple = ('pickle', )
     # Methods that should not be wrapped directly
-    whitelist: Tuple = ('serializable', 'serialize')
+    whitelist: tuple = ('serializable', 'serialize')
     # Datatypes that do not need to be checked in methods
     not_check_type: list = []
 
@@ -240,7 +251,7 @@ class FormatMixin:
         return method
 
     def _format_global_function(self,
-                                function: Union[parser.GlobalFunction, Any],
+                            function: [parser.GlobalFunction | Any],
                                 separator: str = ''):
         """Example:
 
