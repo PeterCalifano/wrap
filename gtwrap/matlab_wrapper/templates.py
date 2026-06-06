@@ -105,7 +105,7 @@ class WrapperTemplate:
     collector_function_serialize = textwrap.indent(textwrap.dedent("""\
             typedef std::shared_ptr<{full_name}> Shared;
             checkArguments("string_serialize",nargout,nargin-1,0);
-            Shared obj = unwrap_shared_ptr<{full_name}>(in[0], "ptr_{namespace}{class_name}");
+            Shared obj = unwrap_shared_ptr<{full_name}>({ctx}in[0], "ptr_{namespace}{class_name}");
             ostringstream out_archive_stream;
             boost::archive::text_oarchive out_archive(out_archive_stream);
             out_archive << *obj;
@@ -121,7 +121,7 @@ class WrapperTemplate:
             boost::archive::text_iarchive in_archive(in_archive_stream);
             Shared output(new {full_name}());
             in_archive >> *output;
-            out[0] = wrap_shared_ptr(output,"{namespace}.{class_name}", false);
+            out[0] = wrap_shared_ptr({ctx}output,"{namespace}.{class_name}", false);
         """),
                                                      prefix='  ')
 
@@ -143,7 +143,7 @@ class WrapperTemplate:
     collector_function_shared_return = textwrap.indent(textwrap.dedent('''\
             {{
             std::shared_ptr<{name}> shared({shared_obj});
-            out[{id}] = wrap_shared_ptr(shared,"{name}");
+            out[{id}] = wrap_shared_ptr({ctx}shared,"{name}");
             }}{new_line}'''),
                                                        prefix='  ')
 

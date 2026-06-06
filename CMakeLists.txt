@@ -75,8 +75,8 @@ install(DIRECTORY pybind11 DESTINATION "${GTWRAP_LIB_INSTALL_DIR}")
 install(PROGRAMS scripts/pybind_wrap.py scripts/matlab_wrap.py
         DESTINATION "${GTWRAP_BIN_INSTALL_DIR}")
 
-# Install the matlab.h file to `CMAKE_INSTALL_PREFIX/lib/gtwrap/matlab.h`.
-install(FILES matlab.h DESTINATION "${GTWRAP_INCLUDE_INSTALL_DIR}")
+# Install the matlab.h (legacy C MEX API) and matlab_cpp.h (modern C++ MEX API) runtime headers to `CMAKE_INSTALL_PREFIX/lib/gtwrap/`.
+install(FILES matlab.h matlab_cpp.h DESTINATION "${GTWRAP_INCLUDE_INSTALL_DIR}")
 
 string(ASCII 27 Esc)
 set(gtwrap "${Esc}[1;36mgtwrap${Esc}[m")

@@ -8,7 +8,7 @@ and invoked during the wrapping by CMake.
 import argparse
 import sys
 
-from gtwrap.matlab_wrapper import MatlabWrapper
+from gtwrap.matlab_wrapper import MatlabWrapper, MatlabWrapperCpp
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser(
@@ -48,6 +48,14 @@ if __name__ == "__main__":
         action="store_true",
         help="Allow boost based serialization methods",
     )
+    arg_parser.add_argument(
+        "--mex-api",
+        type=str,
+        choices=("c", "cpp"),
+        default="c",
+        help="MEX API to target: 'c' (legacy mex.h) or 'cpp' "
+        "(modern matlab::mex C++ API).",
+    )
     args = arg_parser.parse_args()
 
     top_module_namespaces = args.top_module_namespaces.split("::")
@@ -56,7 +64,8 @@ if __name__ == "__main__":
 
     print(f"[MatlabWrapper] Ignoring classes: {args.ignore}", file=sys.stderr)
 
-    wrapper = MatlabWrapper(
+    wrapper_cls = MatlabWrapperCpp if args.mex_api == "cpp" else MatlabWrapper
+    wrapper = wrapper_cls(
         module_name=args.module_name,
         top_module_namespace=top_module_namespaces,
         ignore_classes=args.ignore,

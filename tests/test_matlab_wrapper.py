@@ -16,7 +16,7 @@ from unittest import mock
 sys.path.append(osp.dirname(osp.dirname(osp.abspath(__file__))))
 
 from gtwrap.matlab_wrapper import wrapper as matlab_wrapper_module
-from gtwrap.matlab_wrapper import MatlabWrapper
+from gtwrap.matlab_wrapper import MatlabWrapper, MatlabWrapperCpp
 
 
 class TestWrap(unittest.TestCase):
@@ -445,6 +445,172 @@ class TestWrap(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,
                                     'Non-const string references'):
             wrapper.wrap([file], path=self.MATLAB_ACTUAL_DIR)
+
+
+class TestWrapCpp(unittest.TestCase):
+    """Test the MATLAB wrapper generating against the modern C++ MEX API.
+
+    Mirrors the C-API codegen tests one-to-one: each module's generated
+    ``*_wrapper.cpp`` is compared against a golden fixture under
+    ``expected/matlab_cpp``, and every generated ``.m`` file is asserted
+    byte-identical to the C-API expected output (the `.m` contract does not
+    depend on the MEX API).
+    """
+
+    # (module, [interface files], kwargs, [curated output files]).
+    # Mirrors the per-module file lists of the C-API tests exactly: the
+    # `*_wrapper.cpp` is checked against expected/matlab_cpp, every `.m`
+    # against expected/matlab (the `.m` contract is API-independent).
+    MODULES = [
+        ('geometry', ['geometry.i'],
+         dict(top_module_namespace=['gtsam'], use_boost_serialization=True),
+         ['geometry_wrapper.cpp', '+gtsam/Point2.m', '+gtsam/Point3.m']),
+        ('functions', ['functions.i'], dict(top_module_namespace=['gtsam']),
+         ['functions_wrapper.cpp', 'aGlobalFunction.m', 'load2D.m',
+          'MultiTemplatedFunctionDoubleSize_tDouble.m',
+          'MultiTemplatedFunctionStringSize_tDouble.m',
+          'overloadedGlobalFunction.m', 'TemplatedFunctionRot3.m',
+          'DefaultFuncInt.m', 'DefaultFuncObj.m', 'DefaultFuncString.m',
+          'DefaultFuncVector.m', 'DefaultFuncZero.m', 'setPose.m',
+          'EliminateDiscrete.m', 'triangulatePoint3Cal3_S2.m',
+          'FindKarcherMeanPoint3.m', 'FindKarcherMeanSO3.m',
+          'FindKarcherMeanSO4.m', 'FindKarcherMeanPose3.m']),
+        ('class', ['class.i'], dict(top_module_namespace=['gtsam']),
+         ['class_wrapper.cpp', 'ForwardKinematics.m', 'FunDouble.m',
+          'FunRange.m', 'HessianFactor.m', 'MultipleTemplatesIntDouble.m',
+          'MultipleTemplatesIntFloat.m', 'MyFactorPosePoint2.m', 'MyVector3.m',
+          'MyVector12.m', 'PrimitiveRefDouble.m',
+          'SmartProjectionRigFactorPinholeCameraCal3_S2.m', 'Test.m']),
+        ('enum', ['enum.i'], dict(top_module_namespace=['gtsam']),
+         ['enum_wrapper.cpp', 'Color.m', 'Pet.m', '+Pet/Kind.m',
+          '+gtsam/VerbosityLM.m', '+gtsam/+MCU/Avengers.m',
+          '+gtsam/+MCU/GotG.m',
+          '+gtsam/+OptimizerGaussNewtonParams/Verbosity.m']),
+        ('template', ['templates.i'], dict(top_module_namespace=['gtsam']),
+         ['template_wrapper.cpp', 'ScopedTemplateResult.m',
+          'TemplatedConstructor.m']),
+        ('inheritance', ['inheritance.i'], dict(top_module_namespace=['gtsam']),
+         ['inheritance_wrapper.cpp', 'MyBase.m', 'MyTemplateA.m',
+          'MyTemplateMatrix.m', 'MyTemplatePoint2.m',
+          'ForwardKinematicsFactor.m', 'ParentHasTemplateDouble.m']),
+        ('namespaces', ['namespaces.i'], dict(top_module_namespace=['gtsam']),
+         ['namespaces_wrapper.cpp', '+ns1/aGlobalFunction.m', '+ns1/ClassA.m',
+          '+ns1/ClassB.m', '+ns2/+ns3/ClassB.m', '+ns2/aGlobalFunction.m',
+          '+ns2/ClassA.m', '+ns2/ClassC.m', '+ns2/overloadedGlobalFunction.m',
+          'ClassD.m', '+gtsam/Values.m']),
+        ('special_cases', ['special_cases.i'],
+         dict(top_module_namespace=['gtsam']),
+         ['special_cases_wrapper.cpp', '+gtsam/GeneralSFMFactorCal3Bundler.m',
+          '+gtsam/NonlinearFactorGraph.m', '+gtsam/PinholeCameraCal3Bundler.m',
+          '+gtsam/SfmTrack.m']),
+        ('multiple_files', ['part1.i', 'part2.i'],
+         dict(top_module_namespace=['gtsam']),
+         ['multiple_files_wrapper.cpp', '+gtsam/Class1.m', '+gtsam/Class2.m',
+          '+gtsam/ClassA.m']),
+    ]
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.TEST_DIR = osp.dirname(osp.realpath(__file__))
+        self.INTERFACE_DIR = osp.join(self.TEST_DIR, "fixtures")
+        self.MATLAB_C_DIR = osp.join(self.TEST_DIR, "expected", "matlab")
+        self.MATLAB_CPP_DIR = osp.join(self.TEST_DIR, "expected", "matlab_cpp")
+        self.ACTUAL_DIR = osp.join(self.TEST_DIR, "actual", "matlab_cpp")
+        os.makedirs(self.ACTUAL_DIR, exist_ok=True)
+
+    def _generate(self, module_name, srcs, kwargs):
+        out = osp.join(self.ACTUAL_DIR, module_name)
+        os.makedirs(out, exist_ok=True)
+        wrapper = MatlabWrapperCpp(module_name=module_name,
+                                   ignore_classes=[''], **kwargs)
+        wrapper.wrap([osp.join(self.INTERFACE_DIR, s) for s in srcs], path=out)
+        return out
+
+    def _assert_match(self, actual, expected, label):
+        if not filecmp.cmp(actual, expected, shallow=False):
+            os.system(f"diff {actual} {expected}")
+        self.assertTrue(filecmp.cmp(actual, expected, shallow=False),
+                        f"Mismatch for {label}")
+
+    def test_cpp_modules_match_expected(self):
+        """Each module's .cpp matches the C++ golden and its .m the C target."""
+        for module_name, srcs, kwargs, files in self.MODULES:
+            with self.subTest(module=module_name):
+                out = self._generate(module_name, srcs, kwargs)
+                for rel in files:
+                    actual = osp.join(out, rel)
+                    if rel.endswith('.cpp'):
+                        expected = osp.join(self.MATLAB_CPP_DIR, rel)
+                    else:
+                        expected = osp.join(self.MATLAB_C_DIR, rel)
+                    self._assert_match(actual, expected, f"{module_name}/{rel}")
+
+    def test_cpp_ownership_uses_safe_handles(self):
+        """C++ target uses typed handles and no manual lock/atexit/mxArray."""
+        out = self._generate('matlab_ownership', ['matlab_ownership.i'],
+                             dict(top_module_namespace=['']))
+        with open(osp.join(out, 'matlab_ownership_wrapper.cpp'),
+                  encoding="UTF-8") as f:
+            cpp = f.read()
+
+        # Lifetime is owned by the MexFunction instance, not the C lock API.
+        for banned in ('mexLock', 'mexUnlock', 'mexAtExit', 'mxCreateNumericMatrix',
+                       'mxGetData', 'reinterpret_cast<Shared**>'):
+            self.assertNotIn(banned, cpp)
+
+        # Stale-handle protection is preserved.
+        self.assertIn(
+            "  item = collector_OwnedThing.find(self);\n"
+            "  if(item == collector_OwnedThing.end()) {\n"
+            "    return;\n"
+            "  }\n"
+            "  collector_OwnedThing.erase(item);\n"
+            "  delete self;\n", cpp)
+        # Typed handle helpers + virtual upcast preserved.
+        self.assertIn("Shared *self = new Shared(new OwnedThing());", cpp)
+        self.assertIn("out[0] = make_handle<Shared>(self);", cpp)
+        self.assertIn("Shared *self = get_handle<Shared>(in[0]);", cpp)
+        self.assertIn("void VirtualDerived_upcastFromVoid_", cpp)
+        self.assertIn(
+            "Shared *self = new Shared(std::static_pointer_cast<VirtualDerived>(*asVoid));",
+            cpp)
+
+    def test_cpp_scalar_contracts(self):
+        """Scalar-vs-pointer contracts are identical to the C target."""
+        out = self._generate('matlab_scalar_contracts',
+                             ['matlab_scalar_contracts.i'],
+                             dict(top_module_namespace=['scalar_contracts']))
+        with open(osp.join(out, 'matlab_scalar_contracts_wrapper.cpp'),
+                  encoding="UTF-8") as f:
+            cpp = f.read()
+
+        self.assertNotIn('unwrap_shared_ptr< string >', cpp)
+        self.assertNotIn('unwrap_shared_ptr< uint32_t >', cpp)
+        self.assertIn('string value = unwrap< string >(in[1]);', cpp)
+        self.assertIn('uint32_t value = unwrap< uint32_t >(in[1]);', cpp)
+        self.assertIn('out[0] = wrap< uint32_t >', cpp)
+
+    def test_cpp_entry_point_structure(self):
+        """The generated file exposes a single MexFunction via matlab_cpp.h."""
+        out = self._generate('geometry', ['geometry.i'],
+                             dict(top_module_namespace=['gtsam'],
+                                  use_boost_serialization=True))
+        with open(osp.join(out, 'geometry_wrapper.cpp'), encoding="UTF-8") as f:
+            cpp = f.read()
+        self.assertEqual(cpp.count('class MexFunction'), 1)
+        self.assertIn('#include <wrap/matlab_cpp.h>', cpp)
+        self.assertIn('~MexFunction() override {\n    try {', cpp)
+        self.assertIn('} catch(...) {', cpp)
+        self.assertIn('if(!rttiRegistered_) {', cpp)
+        self.assertIn('_geometry_RTTIRegister(ctx.engine);', cpp)
+        self.assertIn('rttiRegistered_ = true;', cpp)
+        self.assertIn('WrapIn in(inputs, 1);', cpp)
+        self.assertIn('bool rttiRegistered_ = false;', cpp)
+        self.assertNotIn(
+            'std::vector<matlab::data::Array> in(inputs.begin() + 1, inputs.end());',
+            cpp)
+        # mexAdapter.hpp is pulled in once via matlab_cpp.h, not the wrapper.
+        self.assertNotIn('mexAdapter.hpp', cpp)
 
 
 if __name__ == '__main__':
