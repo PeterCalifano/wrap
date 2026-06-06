@@ -5,6 +5,8 @@ Date: March 2019
 """
 # pylint: disable=import-error, wrong-import-position
 
+from gtwrap.matlab_wrapper import MatlabWrapper
+from gtwrap.matlab_wrapper import wrapper as matlab_wrapper_module
 import filecmp
 import os
 import os.path as osp
@@ -14,9 +16,6 @@ import unittest
 from unittest import mock
 
 sys.path.append(osp.dirname(osp.dirname(osp.abspath(__file__))))
-
-from gtwrap.matlab_wrapper import wrapper as matlab_wrapper_module
-from gtwrap.matlab_wrapper import MatlabWrapper
 
 
 class TestWrap(unittest.TestCase):
@@ -431,6 +430,39 @@ class TestWrap(unittest.TestCase):
             "  mexLock();\n"
             "  *reinterpret_cast<Shared**>(mxGetData(out[0])) = self;\n",
             wrapper_cpp)
+
+    def test_matlab_runtime_proxy_construction_failure_cleans_lock(self):
+        """Returned shared_ptr proxy construction must release ownership on failure."""
+        with open(osp.join(self.TEST_DIR, '..', 'matlab.h'),
+                  encoding="UTF-8") as header_file:
+            header = header_file.read()
+
+        self.assertIn(
+            "mxArray** constructionError = nullptr",
+            header)
+        self.assertIn(
+            "mexCallMATLABWithTrap(1, &result, nargin, input, derivedClassName)",
+            header)
+        self.assertNotIn(
+            "mexCallMATLAB(1,&result, nargin, input, derivedClassName);",
+            header)
+        self.assertIn(
+            "if(constructionError) {\n"
+            "      *constructionError = exception;\n"
+            "    } else {\n"
+            "      gtwrap::ReportMatlabException(\n"
+            "        exception, \"wrap: failed constructing MATLAB proxy object\");\n"
+            "    }\n"
+            "    return nullptr;",
+            header)
+        self.assertIn(
+            "if(exception || !result) {\n"
+            "      delete heapPtr;\n"
+            "      mexUnlock();\n"
+            "      gtwrap::ReportMatlabException(\n"
+            "        exception, \"wrap: failed constructing MATLAB proxy object\");\n"
+            "    }",
+            header)
 
     def test_non_const_string_ref_is_rejected(self):
         """Reject mutable string references instead of generating lossy wrappers."""

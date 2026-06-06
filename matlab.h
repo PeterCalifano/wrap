@@ -145,6 +145,43 @@ void MexErrMsgIdAndTxt(const char* id, const char* str) {
   mexErrMsgIdAndTxt(id, str);
 }
 
+void DestroyArray(mxArray*& array) {
+  if (array) {
+    mxDestroyArray(array);
+    array = nullptr;
+  }
+}
+
+std::string ExceptionMessage(mxArray* exception) {
+  if (!exception) {
+    return "";
+  }
+
+  mxArray* message = mxGetProperty(exception, 0, "message");
+  if (!message) {
+    return "";
+  }
+
+  char* data = mxArrayToString(message);
+  DestroyArray(message);
+  if (!data) {
+    return "";
+  }
+
+  std::string result(data);
+  mxFree(data);
+  return result;
+}
+
+void ReportMatlabException(mxArray* exception, const char* fallback) {
+  std::string message = ExceptionMessage(exception);
+  DestroyArray(exception);
+  if (message.empty()) {
+    MexErrMsgTxt(fallback);
+  }
+  MexErrMsgTxt(("wrap: MATLAB proxy construction failed: " + message).c_str());
+}
+
 } // namespace gtwrap
 
 void error(const char* str) {
@@ -537,9 +574,14 @@ gtsam::Matrix unwrap< gtsam::Matrix >(const mxArray* array) {
  order to be able to add to the collector could be in a different wrap
  module.
 */
-mxArray* create_object(const std::string& classname, void *pointer, bool isVirtual, const char *rttiName) {
-  mxArray *result;
-  mxArray *input[3];
+mxArray* create_object(
+    const std::string& classname,
+    void *pointer,
+    bool isVirtual,
+    const char *rttiName,
+    mxArray** constructionError = nullptr) {
+  mxArray *result = nullptr;
+  mxArray *input[3] = {nullptr, nullptr, nullptr};
   int nargin = 2;
   // First input argument is pointer constructor key
   input[0] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
@@ -551,13 +593,18 @@ mxArray* create_object(const std::string& classname, void *pointer, bool isVirtu
   const char *derivedClassName;
   if(isVirtual) {
     const mxArray *rttiRegistry = mexGetVariablePtr("global", "gtsamwrap_rttiRegistry");
-    if(!rttiRegistry)
+    if(!rttiRegistry) {
+      gtwrap::DestroyArray(input[0]);
+      gtwrap::DestroyArray(input[1]);
       gtwrap::MexErrMsgTxt(
       "wrap:  RTTI registry is missing - it could have been cleared from the workspace."
       "  You can issue 'clear all' to completely clear the workspace, and next time a wrapped object is"
       " created the RTTI registry will be recreated.");
+    }
     const mxArray *derivedNameMx = mxGetField(rttiRegistry, 0, rttiName);
-    if(!derivedNameMx)
+    if(!derivedNameMx) {
+      gtwrap::DestroyArray(input[0]);
+      gtwrap::DestroyArray(input[1]);
       gtwrap::MexErrMsgTxt((
       "wrap:  The derived class type " + string(rttiName) + " was not found in the RTTI registry.  "
       "Try calling 'clear all' twice consecutively - we have seen things not get unloaded properly the "
@@ -566,10 +613,15 @@ mxArray* create_object(const std::string& classname, void *pointer, bool isVirtu
       "definition header file for your module, but a derived type was returned by a C++ "
       "function and that derived type was not marked virtual (or was not specified in the wrap interface "
       "definition header at all).").c_str());
+    }
     size_t strLen = mxGetN(derivedNameMx);
     char *buf = new char[strLen+1];
-    if(mxGetString(derivedNameMx, buf, strLen+1))
+    if(mxGetString(derivedNameMx, buf, strLen+1)) {
+      delete[] buf;
+      gtwrap::DestroyArray(input[0]);
+      gtwrap::DestroyArray(input[1]);
       gtwrap::MexErrMsgTxt("wrap:  Internal error reading RTTI table, try 'clear all' to clear your workspace and reinitialize the toolbox.");
+    }
     derivedClassName = buf;
     input[2] = mxCreateString("void");
     nargin = 3;
@@ -577,13 +629,23 @@ mxArray* create_object(const std::string& classname, void *pointer, bool isVirtu
     derivedClassName = classname.c_str();
   }
   // Call special pointer constructor, which sets 'self'
-  mexCallMATLAB(1,&result, nargin, input, derivedClassName);
+  mxArray* exception =
+    mexCallMATLABWithTrap(1, &result, nargin, input, derivedClassName);
   // Deallocate our memory
-  mxDestroyArray(input[0]);
-  mxDestroyArray(input[1]);
+  gtwrap::DestroyArray(input[0]);
+  gtwrap::DestroyArray(input[1]);
   if(isVirtual) {
-    mxDestroyArray(input[2]);
+    gtwrap::DestroyArray(input[2]);
     delete[] derivedClassName;
+  }
+  if(exception || !result) {
+    if(constructionError) {
+      *constructionError = exception;
+    } else {
+      gtwrap::ReportMatlabException(
+        exception, "wrap: failed constructing MATLAB proxy object");
+    }
+    return nullptr;
   }
   return result;
 }
@@ -603,7 +665,14 @@ mxArray* wrap_shared_ptr(std::shared_ptr< Class > shared_ptr, const std::string&
   } else {
     std::shared_ptr<Class> *heapPtr = new std::shared_ptr<Class>(shared_ptr);
     mexLock();
-    result = create_object(matlabName, heapPtr, isVirtual, "");
+    mxArray* exception = nullptr;
+    result = create_object(matlabName, heapPtr, isVirtual, "", &exception);
+    if(exception || !result) {
+      delete heapPtr;
+      mexUnlock();
+      gtwrap::ReportMatlabException(
+        exception, "wrap: failed constructing MATLAB proxy object");
+    }
   }
   return result;
 }
