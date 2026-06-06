@@ -5,6 +5,14 @@ else()
   set(GTWRAP_PACKAGE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
 endif()
 
+# Which MEX API the generated MATLAB wrappers target:
+#   c   - legacy C MEX API (mex.h), the default
+#   cpp - modern C++ MEX API (mex.hpp / matlab::data, R2021b+)
+set(WRAP_MEX_API
+    "c"
+    CACHE STRING "MEX API for generated MATLAB wrappers: 'c' or 'cpp'")
+set_property(CACHE WRAP_MEX_API PROPERTY STRINGS "c" "cpp")
+
 # Macro which finds and configure Matlab before we do any wrapping.
 macro(find_and_configure_matlab)
   find_package(
@@ -253,7 +261,8 @@ function(wrap_library_internal interfaceHeader moduleName linkLibraries extraInc
                       ${PYTHON_EXECUTABLE} ${MATLAB_WRAP_SCRIPT} 
                       --src "${interfaceHeader}"
                       --module_name ${moduleName} --out ${generated_files_path}
-                      --top_module_namespaces ${moduleName} --ignore ${ignore_classes} ${_BOOST_SERIALIZATION}
+                      --top_module_namespaces ${moduleName} --ignore ${ignore_classes}
+                      --mex-api ${WRAP_MEX_API} ${_BOOST_SERIALIZATION}
                     VERBATIM
                     WORKING_DIRECTORY ${generated_files_path}
                   )
@@ -275,12 +284,21 @@ function(wrap_library_internal interfaceHeader moduleName linkLibraries extraInc
                ARCHIVE_OUTPUT_DIRECTORY "${compiled_mex_modules_root}"
                RUNTIME_OUTPUT_DIRECTORY "${compiled_mex_modules_root}"
                CLEAN_DIRECT_OUTPUT 1)
+  if(WRAP_MEX_API STREQUAL "cpp")
+    # Modern C++ MEX API: needs C++17 and a target release; no MX_COMPAT_32.
+    set(_wrapApiDefines "-DMATLAB_DEFAULT_RELEASE=R2021b")
+    set_target_properties(
+      ${moduleName}_matlab_wrapper
+      PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
+  else()
+    set(_wrapApiDefines "-DMX_COMPAT_32")
+  endif()
   set_property(
     TARGET ${moduleName}_matlab_wrapper
     APPEND_STRING
     PROPERTY
       COMPILE_FLAGS
-      " ${extraMexFlagsSpaced} ${mexFlagsSpaced} \"-I${MATLAB_ROOT}/extern/include\" -DMATLAB_MEX_FILE -DMX_COMPAT_32"
+      " ${extraMexFlagsSpaced} ${mexFlagsSpaced} \"-I${MATLAB_ROOT}/extern/include\" -DMATLAB_MEX_FILE ${_wrapApiDefines}"
   )
   set_property(
     TARGET ${moduleName}_matlab_wrapper
@@ -303,6 +321,10 @@ function(wrap_library_internal interfaceHeader moduleName linkLibraries extraInc
     target_link_libraries(
       ${moduleName}_matlab_wrapper "${mxLibPath}/libmex.lib"
       "${mxLibPath}/libmx.lib" "${mxLibPath}/libmat.lib")
+    if(WRAP_MEX_API STREQUAL "cpp")
+      target_link_libraries(
+        ${moduleName}_matlab_wrapper "${mxLibPath}/libMatlabDataArray.lib")
+    endif()
     set_target_properties(${moduleName}_matlab_wrapper
                           PROPERTIES LINK_FLAGS "/export:mexFunction")
     set_property(
@@ -319,6 +341,19 @@ function(wrap_library_internal interfaceHeader moduleName linkLibraries extraInc
     target_link_libraries(
       ${moduleName}_matlab_wrapper "${mxLibPath}/libmex.dylib"
       "${mxLibPath}/libmx.dylib" "${mxLibPath}/libmat.dylib")
+    if(WRAP_MEX_API STREQUAL "cpp")
+      target_link_libraries(
+        ${moduleName}_matlab_wrapper "${mxLibPath}/libMatlabDataArray.dylib")
+    endif()
+  elseif(UNIX AND WRAP_MEX_API STREQUAL "cpp")
+    # On Linux the legacy C MEX symbols are resolved by MATLAB at load time, so
+    # the C path links nothing here. The C++ MEX API needs the in-process MEX
+    # library (libmex, which provides the MATLABEngine interface) and the Data
+    # Array library. There is no separate libMatlabEngine for in-process MEX.
+    set(mxLibPath "${MATLAB_ROOT}/bin/glnxa64")
+    target_link_libraries(
+      ${moduleName}_matlab_wrapper "${mxLibPath}/libmex.so"
+      "${mxLibPath}/libMatlabDataArray.so")
   endif()
 
   # Hacking around output issue with custom command Deletes generated build

@@ -410,7 +410,7 @@ void Test_return_Point2Ptr_25(int nargout, mxArray *out[], int nargin, const mxA
   bool value = unwrap< bool >(in[1]);
   {
   std::shared_ptr<Point2> shared(obj->return_Point2Ptr(value));
-  out[0] = wrap_shared_ptr(shared,"Point2");
+  out[0] = wrap_shared_ptr(shared,"Point2", false);
   }
 }
 

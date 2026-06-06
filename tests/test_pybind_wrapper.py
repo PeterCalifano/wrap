@@ -35,13 +35,15 @@ class TestWrap(unittest.TestCase):
                      sources,
                      module_name,
                      output_dir,
-                     use_boost_serialization=False):
+                     use_boost_serialization=False,
+                     module_template=None):
         """
         Common function to wrap content in `sources`.
         """
-        with open(osp.join(self.TEST_DIR, "pybind_wrapper.tpl"),
-                  encoding="UTF-8") as template_file:
-            module_template = template_file.read()
+        if module_template is None:
+            with open(osp.join(self.TEST_DIR, "pybind_wrapper.tpl"),
+                      encoding="UTF-8") as template_file:
+                module_template = template_file.read()
 
         # Create Pybind wrapper instance
         wrapper = PybindWrapper(
@@ -158,6 +160,72 @@ class TestWrap(unittest.TestCase):
         output = self.wrap_content([source], 'enum_py', self.PYTHON_ACTUAL_DIR)
 
         self.compare_and_diff('enum_pybind.cpp', output)
+
+    def test_argument_policy_hook(self):
+        """Test that typed args are emitted through the overridable policy hook."""
+        source = osp.join(self.INTERFACE_DIR, 'arg_policies.i')
+        module_template = """#include <pybind11/pybind11.h>
+
+{includes}
+
+#include "python/arg_policy_preamble.h"
+
+namespace py = pybind11;
+
+PYBIND11_MODULE({module_name}, m_) {{
+    m_.doc() = "pybind11 wrapper of {module_name}";
+
+{wrapped_namespace}
+
+}}
+"""
+        output = self.wrap_content([source],
+                                   'arg_policies_py',
+                                   self.PYTHON_ACTUAL_DIR,
+                                   module_template=module_template)
+
+        with open(output, 'r', encoding='UTF-8') as f:
+            content = f.read()
+
+        self.assertLess(content.index('template <typename T>\nstruct PyArgPolicy'),
+                        content.index('#include "python/arg_policy_preamble.h"'))
+        self.assertIn(
+            'gtwrap::internal::py_arg<const testing::SpecialView&>("values")',
+            content)
+        self.assertIn('gtwrap::internal::py_arg<int>("count") = 1', content)
+
+    def test_const_ref_return_policy(self):
+        """Test that only const-ref method returns emit reference_internal."""
+        source = osp.join(self.INTERFACE_DIR, 'class.i')
+        output = self.wrap_content([source], 'class_py',
+                                   self.PYTHON_ACTUAL_DIR)
+
+        with open(output, 'r', encoding='UTF-8') as f:
+            content = f.read()
+
+        self.assertIn('-> const auto&{return self->return_vector2', content)
+        self.assertIn('-> const auto&{return self->return_matrix2', content)
+        self.assertIn('py::return_value_policy::reference_internal', content)
+
+        for line in content.split('\n'):
+            if 'return_vector1' in line or 'return_matrix1' in line:
+                self.assertNotIn('reference_internal', line)
+                self.assertNotIn('-> const auto&', line)
+
+        source = osp.join(self.INTERFACE_DIR, 'return_policies.i')
+        output = self.wrap_content([source], 'return_policies_py',
+                                   self.PYTHON_ACTUAL_DIR)
+
+        with open(output, 'r', encoding='UTF-8') as f:
+            content = f.read()
+
+        for line in content.split('\n'):
+            if 'return_const_ref' in line:
+                self.assertIn('reference_internal', line)
+                self.assertIn('-> const auto&', line)
+            if '.def("return_mutable_ref"' in line or '.def("return_value"' in line:
+                self.assertNotIn('reference_internal', line)
+                self.assertNotIn('-> const auto&', line)
 
 
 if __name__ == '__main__':

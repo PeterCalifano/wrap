@@ -46,7 +46,8 @@ build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 addopts = "--cov=gtwrap --cov-report html --cov-report term"
-norecursedirs = []
+testpaths = ["tests"]
+norecursedirs = ["pybind11"]
 
 [tool.uv.build-backend]
 module-name = "gtwrap"

@@ -1,6 +1,7 @@
 __pycache__/
 .vscode/
 *build*
+!tests/test_matlab_runtime_build.py
 *install*
 *dist*
 *.egg-info
@@ -9,6 +10,7 @@ __pycache__/
 
 # Files related to code coverage stats
 **/.coverage
+htmlcov/
 
 gtwrap/matlab_wrapper/matlab_wrapper.tpl
 
