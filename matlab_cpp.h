@@ -43,6 +43,7 @@ using gtsam::Vector;
 #include <algorithm>
 #include <cstdint>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <memory>
 #include <set>
@@ -267,6 +268,14 @@ inline const char *typeName(matlab::data::ArrayType t)
         return "char";
     case ArrayType::COMPLEX_DOUBLE:
         return "complex double";
+    case ArrayType::COMPLEX_SINGLE:
+        return "complex single";
+    case ArrayType::SPARSE_LOGICAL:
+        return "sparse logical";
+    case ArrayType::SPARSE_DOUBLE:
+        return "sparse double";
+    case ArrayType::SPARSE_COMPLEX_DOUBLE:
+        return "sparse complex double";
     case ArrayType::CELL:
         return "cell";
     case ArrayType::STRUCT:
@@ -419,12 +428,15 @@ inline matlab::data::Array wrap<bool>(const bool &value)
     return f.createScalar<bool>(value);
 }
 
+// specialization to size_t but skip Win64 where size_t == uint64_t.
+#if !defined(_WIN64) || defined(__CUDACC__)
 template <>
 inline matlab::data::Array wrap<size_t>(const size_t &value)
 {
     matlab::data::ArrayFactory f;
     return f.createScalar<std::uint64_t>(static_cast<std::uint64_t>(value));
 }
+#endif
 
 template <>
 inline matlab::data::Array wrap<int>(const int &value)
@@ -559,12 +571,15 @@ inline int unwrap<int>(const matlab::data::Array &array)
     return myGetScalar<int>(array);
 }
 
+// specialization to size_t but skip Win64 where size_t == uint64_t.
+#if !defined(_WIN64) || defined(__CUDACC__)
 template <>
 inline size_t unwrap<size_t>(const matlab::data::Array &array)
 {
     checkScalar(array, "unwrap<size_t>");
     return myGetScalar<size_t>(array);
 }
+#endif
 
 template <>
 inline double unwrap<double>(const matlab::data::Array &array)
@@ -616,6 +631,35 @@ inline gtsam::Matrix unwrap<gtsam::Matrix>(const matlab::data::Array &array)
     gtsam::Matrix A(dims[0], dims[1]);
     std::copy(data.begin(), data.end(), A.data());
     return A;
+}
+
+// Unwrap a MATLAB full real double matrix as a const Eigen matrix view without
+// copying. The view aliases the MATLAB array for the duration of the generated
+// wrapper call expression.
+template <typename MatrixView>
+MatrixView unwrapMatrixView(const matlab::data::Array &array)
+{
+    if (array.getType() != matlab::data::ArrayType::DOUBLE)
+        error((std::string("unwrapMatrixView: expected a full real double matrix, got a ") +
+               describe(array))
+                  .c_str());
+    const auto dims = array.getDimensions();
+    const auto maxIndex =
+        static_cast<unsigned long long>((std::numeric_limits<Eigen::Index>::max)());
+    if (static_cast<unsigned long long>(dims[0]) > maxIndex ||
+        static_cast<unsigned long long>(dims[1]) > maxIndex)
+    {
+        error("unwrapMatrixView: matrix dimensions exceed Eigen::Index");
+    }
+
+    const Eigen::Index m = static_cast<Eigen::Index>(dims[0]);
+    const Eigen::Index n = static_cast<Eigen::Index>(dims[1]);
+    using Stride = Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>;
+    using ConstMatrixMap = Eigen::Map<const gtsam::Matrix, 0, Stride>;
+    const matlab::data::TypedArray<double> data(array);
+    const double *ptr = array.getNumberOfElements() ? &(*data.cbegin()) : nullptr;
+    ConstMatrixMap map(ptr, m, n, Stride(m, 1));
+    return MatrixView(map);
 }
 
 //*****************************************************************************

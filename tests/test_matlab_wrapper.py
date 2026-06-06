@@ -98,6 +98,46 @@ class TestWrap(unittest.TestCase):
             self.assertEqual(local_headers.splitlines()[
                              0], "#include <wrap/matlab.h>")
 
+    def test_matrix_view_arguments(self):
+        """Test that matrix view arguments use MATLAB double arrays directly."""
+        file = osp.join(self.INTERFACE_DIR, 'matrix_views.i')
+
+        wrapper = MatlabWrapper(module_name='matrix_views',
+                                top_module_namespace=['gtsam'],
+                                ignore_classes=[''])
+
+        wrapper.wrap([file], path=self.MATLAB_ACTUAL_DIR)
+
+        cpp_file = osp.join(self.MATLAB_ACTUAL_DIR, 'matrix_views_wrapper.cpp')
+        with open(cpp_file, 'r', encoding='UTF-8') as f:
+            cpp_content = f.read()
+
+        self.assertIn(
+            'gtsam::ConstMatrixView points = unwrapMatrixView< gtsam::ConstMatrixView >(in[1]);',
+            cpp_content)
+        self.assertIn('obj->acceptView(points);', cpp_content)
+        self.assertIn('obj->scaleView(points,scale)', cpp_content)
+        self.assertNotIn('unwrap< gtsam::ConstMatrixView >', cpp_content)
+        self.assertNotIn('*points', cpp_content)
+
+        m_file = osp.join(self.MATLAB_ACTUAL_DIR, '+gtsam',
+                          'MatrixViewFixture.m')
+        with open(m_file, 'r', encoding='UTF-8') as f:
+            matlab_content = f.read()
+
+        self.assertIn("isa(varargin{1},'double')", matlab_content)
+
+        matlab_header = osp.join(self.TEST_DIR, '..', 'matlab.h')
+        with open(matlab_header, 'r', encoding='UTF-8') as f:
+            header_content = f.read()
+
+        self.assertIn('unwrapMatrixView', header_content)
+        self.assertIn('mxIsSparse(array)', header_content)
+        self.assertIn('mwSize rows', header_content)
+        self.assertIn('static_cast<unsigned long long>(rows)', header_content)
+        self.assertIn('Eigen::Index m', header_content)
+        self.assertIn('Stride(m, 1)', header_content)
+
     def test_geometry(self):
         """
         Check generation of matlab geometry wrapper.
@@ -589,6 +629,32 @@ class TestWrapCpp(unittest.TestCase):
         self.assertIn('string value = unwrap< string >(in[1]);', cpp)
         self.assertIn('uint32_t value = unwrap< uint32_t >(in[1]);', cpp)
         self.assertIn('out[0] = wrap< uint32_t >', cpp)
+
+    def test_cpp_matrix_view_arguments(self):
+        """C++ MEX target keeps matrix views out of pointer unwrap paths."""
+        out = self._generate('matrix_views', ['matrix_views.i'],
+                             dict(top_module_namespace=['gtsam']))
+        with open(osp.join(out, 'matrix_views_wrapper.cpp'),
+                  encoding="UTF-8") as f:
+            cpp = f.read()
+        with open(osp.join(out, '+gtsam', 'MatrixViewFixture.m'),
+                  encoding="UTF-8") as f:
+            matlab_content = f.read()
+        with open(osp.join(self.TEST_DIR, '..', 'matlab_cpp.h'),
+                  encoding="UTF-8") as f:
+            header_content = f.read()
+
+        self.assertIn(
+            'gtsam::ConstMatrixView points = unwrapMatrixView< gtsam::ConstMatrixView >(in[1]);',
+            cpp)
+        self.assertIn('obj->acceptView(points);', cpp)
+        self.assertNotIn('unwrap_shared_ptr< gtsam::ConstMatrixView >', cpp)
+        self.assertNotIn('unwrap< gtsam::ConstMatrixView >', cpp)
+        self.assertIn("isa(varargin{1},'double')", matlab_content)
+        self.assertIn('unwrapMatrixView', header_content)
+        self.assertIn('SPARSE_DOUBLE', header_content)
+        self.assertIn('std::numeric_limits<Eigen::Index>', header_content)
+        self.assertIn('Stride(m, 1)', header_content)
 
     def test_cpp_entry_point_structure(self):
         """The generated file exposes a single MexFunction via matlab_cpp.h."""
