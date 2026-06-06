@@ -22,18 +22,19 @@
  * http://www.cplusplus.com/doc/tutorial/templates.html
  */
 
-#include <gtsam/base/Vector.h>
 #include <gtsam/base/Matrix.h>
+#include <gtsam/base/Vector.h>
+#include <gtsam/base/utilities.h>
 #include <gtsam/geometry/Point2.h>
 #include <gtsam/geometry/Point3.h>
-#include <gtsam/base/utilities.h>
 
-using gtsam::Vector;
 using gtsam::Matrix;
 using gtsam::Point2;
 using gtsam::Point3;
+using gtsam::Vector;
 
-extern "C" {
+extern "C"
+{
 #include <mex.h>
 }
 
@@ -65,14 +66,14 @@ using namespace std;
 // to a shared pointer of the same C++ object type as the MATLAB type.
 // Also present in utilities.h
 static const std::uint64_t ptr_constructor_key =
-  (std::uint64_t('G') << 56) |
-  (std::uint64_t('T') << 48) |
-  (std::uint64_t('S') << 40) |
-  (std::uint64_t('A') << 32) |
-  (std::uint64_t('M') << 24) |
-  (std::uint64_t('p') << 16) |
-  (std::uint64_t('t') << 8) |
-  (std::uint64_t('r'));
+    (std::uint64_t('G') << 56) |
+    (std::uint64_t('T') << 48) |
+    (std::uint64_t('S') << 40) |
+    (std::uint64_t('A') << 32) |
+    (std::uint64_t('M') << 24) |
+    (std::uint64_t('p') << 16) |
+    (std::uint64_t('t') << 8) |
+    (std::uint64_t('r'));
 
 //*****************************************************************************
 // Utilities
@@ -80,166 +81,212 @@ static const std::uint64_t ptr_constructor_key =
 
 // Replacement streambuf for cout that writes to the MATLAB console
 // Thanks to http://stackoverflow.com/a/249008
-class mstream : public std::streambuf {
-protected:
-  virtual std::streamsize xsputn(const char *s, std::streamsize n) {
-    mexPrintf("%.*s",n,s);
-    return n;
-  }
-  virtual int overflow(int c = EOF) {
-    if (c != EOF) {
-      mexPrintf("%.1s",&c);
+class mstream : public std::streambuf
+{
+  protected:
+    virtual std::streamsize xsputn(const char *s, std::streamsize n)
+    {
+        mexPrintf("%.*s", n, s);
+        return n;
     }
-    return 1;
-  }
+    virtual int overflow(int c = EOF)
+    {
+        if (c != EOF)
+        {
+            mexPrintf("%.1s", &c);
+        }
+        return 1;
+    }
 };
 
-namespace gtwrap {
+namespace gtwrap
+{
 
-class CoutRedirect {
- public:
-  CoutRedirect()
-      : outbuf_(std::cout.rdbuf(&mout_)),
-        previous_(activeRedirect()) {
-    activeRedirect() = this;
-  }
+    class CoutRedirect
+    {
+      public:
+        CoutRedirect()
+            : outbuf_(std::cout.rdbuf(&mout_)),
+              previous_(activeRedirect())
+        {
+            activeRedirect() = this;
+        }
 
-  ~CoutRedirect() {
-    restore();
-  }
+        ~CoutRedirect()
+        {
+            restore();
+        }
 
-  void restore() {
-    if (outbuf_) {
-      std::cout.rdbuf(outbuf_);
-      outbuf_ = nullptr;
-      if (activeRedirect() == this) {
-        activeRedirect() = previous_;
-      }
+        void restore()
+        {
+            if (outbuf_)
+            {
+                std::cout.rdbuf(outbuf_);
+                outbuf_ = nullptr;
+                if (activeRedirect() == this)
+                {
+                    activeRedirect() = previous_;
+                }
+            }
+        }
+
+        static void restoreActive()
+        {
+            while (activeRedirect())
+            {
+                activeRedirect()->restore();
+            }
+        }
+
+      private:
+        static CoutRedirect *&activeRedirect()
+        {
+            static CoutRedirect *active = nullptr;
+            return active;
+        }
+
+        mstream mout_;
+        std::streambuf *outbuf_;
+        CoutRedirect *previous_;
+    };
+
+    void MexErrMsgTxt(const char *str)
+    {
+        CoutRedirect::restoreActive();
+        mexErrMsgTxt(str);
     }
-  }
 
-  static void restoreActive() {
-    while (activeRedirect()) {
-      activeRedirect()->restore();
+    void MexErrMsgIdAndTxt(const char *id, const char *str)
+    {
+        CoutRedirect::restoreActive();
+        mexErrMsgIdAndTxt(id, str);
     }
-  }
 
- private:
-  static CoutRedirect*& activeRedirect() {
-    static CoutRedirect* active = nullptr;
-    return active;
-  }
+    void DestroyArray(mxArray *&array)
+    {
+        if (array)
+        {
+            mxDestroyArray(array);
+            array = nullptr;
+        }
+    }
 
-  mstream mout_;
-  std::streambuf* outbuf_;
-  CoutRedirect* previous_;
-};
+    std::string ExceptionMessage(mxArray *exception)
+    {
+        if (!exception)
+        {
+            return "";
+        }
 
-void MexErrMsgTxt(const char* str) {
-  CoutRedirect::restoreActive();
-  mexErrMsgTxt(str);
-}
+        mxArray *message = mxGetProperty(exception, 0, "message");
+        if (!message)
+        {
+            return "";
+        }
 
-void MexErrMsgIdAndTxt(const char* id, const char* str) {
-  CoutRedirect::restoreActive();
-  mexErrMsgIdAndTxt(id, str);
-}
+        char *data = mxArrayToString(message);
+        DestroyArray(message);
+        if (!data)
+        {
+            return "";
+        }
 
-void DestroyArray(mxArray*& array) {
-  if (array) {
-    mxDestroyArray(array);
-    array = nullptr;
-  }
-}
+        std::string result(data);
+        mxFree(data);
+        return result;
+    }
 
-std::string ExceptionMessage(mxArray* exception) {
-  if (!exception) {
-    return "";
-  }
-
-  mxArray* message = mxGetProperty(exception, 0, "message");
-  if (!message) {
-    return "";
-  }
-
-  char* data = mxArrayToString(message);
-  DestroyArray(message);
-  if (!data) {
-    return "";
-  }
-
-  std::string result(data);
-  mxFree(data);
-  return result;
-}
-
-void ReportMatlabException(mxArray* exception, const char* fallback) {
-  std::string message = ExceptionMessage(exception);
-  DestroyArray(exception);
-  if (message.empty()) {
-    MexErrMsgTxt(fallback);
-  }
-  MexErrMsgTxt(("wrap: MATLAB proxy construction failed: " + message).c_str());
-}
+    void ReportMatlabException(mxArray *exception, const char *fallback)
+    {
+        std::string message = ExceptionMessage(exception);
+        DestroyArray(exception);
+        if (message.empty())
+        {
+            MexErrMsgTxt(fallback);
+        }
+        MexErrMsgTxt(("wrap: MATLAB proxy construction failed: " + message).c_str());
+    }
 
 } // namespace gtwrap
 
-void error(const char* str) {
-  gtwrap::MexErrMsgIdAndTxt("wrap:error", str);
+void error(const char *str)
+{
+    gtwrap::MexErrMsgIdAndTxt("wrap:error", str);
 }
 
-mxArray *scalar(mxClassID classid) {
-  mwSize dims[1]; dims[0]=1;
-  return mxCreateNumericArray(1, dims, classid, mxREAL);
+mxArray *scalar(mxClassID classid)
+{
+    mwSize dims[1];
+    dims[0] = 1;
+    return mxCreateNumericArray(1, dims, classid, mxREAL);
 }
 
-void checkScalar(const mxArray* array, const char* str) {
-  if (!array)
-    gtwrap::MexErrMsgIdAndTxt("wrap:notAScalar", str);
-  int m = mxGetM(array), n = mxGetN(array);
-  if (m!=1 || n!=1)
-    gtwrap::MexErrMsgIdAndTxt("wrap:notAScalar", str);
-}
-
-template <typename T>
-mxClassID integralClassId() {
-  static_assert(std::is_integral<T>::value, "T must be integral");
-  if (std::is_signed<T>::value) {
-    switch (sizeof(T)) {
-      case 1: return mxINT8_CLASS;
-      case 2: return mxINT16_CLASS;
-      case 4: return mxINT32_CLASS;
-      case 8: return mxINT64_CLASS;
-      default: break;
-    }
-  } else {
-    switch (sizeof(T)) {
-      case 1: return mxUINT8_CLASS;
-      case 2: return mxUINT16_CLASS;
-      case 4: return mxUINT32_CLASS;
-      case 8: return mxUINT64_CLASS;
-      default: break;
-    }
-  }
-  return mxUINT32OR64_CLASS;
+void checkScalar(const mxArray *array, const char *str)
+{
+    if (!array)
+        gtwrap::MexErrMsgIdAndTxt("wrap:notAScalar", str);
+    int m = mxGetM(array), n = mxGetN(array);
+    if (m != 1 || n != 1)
+        gtwrap::MexErrMsgIdAndTxt("wrap:notAScalar", str);
 }
 
 template <typename T>
-mxArray* wrapIntegralScalar(const T& value) {
-  mxArray *result = scalar(integralClassId<T>());
-  *reinterpret_cast<T*>(mxGetData(result)) = value;
-  return result;
+mxClassID integralClassId()
+{
+    static_assert(std::is_integral<T>::value, "T must be integral");
+    if (std::is_signed<T>::value)
+    {
+        switch (sizeof(T))
+        {
+        case 1:
+            return mxINT8_CLASS;
+        case 2:
+            return mxINT16_CLASS;
+        case 4:
+            return mxINT32_CLASS;
+        case 8:
+            return mxINT64_CLASS;
+        default:
+            break;
+        }
+    }
+    else
+    {
+        switch (sizeof(T))
+        {
+        case 1:
+            return mxUINT8_CLASS;
+        case 2:
+            return mxUINT16_CLASS;
+        case 4:
+            return mxUINT32_CLASS;
+        case 8:
+            return mxUINT64_CLASS;
+        default:
+            break;
+        }
+    }
+    return mxUINT32OR64_CLASS;
+}
+
+template <typename T>
+mxArray *wrapIntegralScalar(const T &value)
+{
+    mxArray *result = scalar(integralClassId<T>());
+    *reinterpret_cast<T *>(mxGetData(result)) = value;
+    return result;
 }
 
 //*****************************************************************************
 // Check arguments
 //*****************************************************************************
 
-void checkArguments(const string& name, int nargout, int nargin, int expected) {
-  stringstream err;
-  err << name << " expects " << expected << " arguments, not " << nargin;
-  if (nargin!=expected)
-    error(err.str().c_str());
+void checkArguments(const string &name, int nargout, int nargin, int expected)
+{
+    stringstream err;
+    err << name << " expects " << expected << " arguments, not " << nargin;
+    if (nargin != expected)
+        error(err.str().c_str());
 }
 
 //*****************************************************************************
@@ -248,105 +295,125 @@ void checkArguments(const string& name, int nargout, int nargin, int expected) {
 
 // default wrapping throws an error: only basic types are allowed in wrap
 template <typename Class>
-mxArray* wrap(const Class& value) {
-  if constexpr (std::is_integral<Class>::value) {
-    return wrapIntegralScalar(value);
-  } else {
-    error("wrap internal error: attempted wrap of invalid type");
-    return 0;
-  }
+mxArray *wrap(const Class &value)
+{
+    if constexpr (std::is_integral<Class>::value)
+    {
+        return wrapIntegralScalar(value);
+    }
+    else
+    {
+        error("wrap internal error: attempted wrap of invalid type");
+        return 0;
+    }
 }
 
 // specialization to string
 // wraps into a character array
-template<>
-mxArray* wrap<string>(const string& value) {
-  return mxCreateString(value.c_str());
+template <>
+mxArray *wrap<string>(const string &value)
+{
+    return mxCreateString(value.c_str());
 }
 
 // specialization to char
-template<>
-mxArray* wrap<char>(const char& value) {
-  return wrapIntegralScalar(value);
+template <>
+mxArray *wrap<char>(const char &value)
+{
+    return wrapIntegralScalar(value);
 }
 
 // specialization to unsigned char
-template<>
-mxArray* wrap<unsigned char>(const unsigned char& value) {
-  return wrapIntegralScalar(value);
+template <>
+mxArray *wrap<unsigned char>(const unsigned char &value)
+{
+    return wrapIntegralScalar(value);
 }
 
 // specialization to bool
-template<>
-mxArray* wrap<bool>(const bool& value) {
-  mxArray *result = scalar(mxUINT32OR64_CLASS);
-  *(bool*)mxGetData(result) = value;
-  return result;
+template <>
+mxArray *wrap<bool>(const bool &value)
+{
+    mxArray *result = scalar(mxUINT32OR64_CLASS);
+    *(bool *)mxGetData(result) = value;
+    return result;
 }
 
 // specialization to size_t
-template<>
-mxArray* wrap<size_t>(const size_t& value) {
-  return wrapIntegralScalar(value);
+template <>
+mxArray *wrap<size_t>(const size_t &value)
+{
+    return wrapIntegralScalar(value);
 }
 
 // specialization to int
-template<>
-mxArray* wrap<int>(const int& value) {
-  return wrapIntegralScalar(value);
+template <>
+mxArray *wrap<int>(const int &value)
+{
+    return wrapIntegralScalar(value);
 }
 
 // specialization to double -> just double
-template<>
-mxArray* wrap<double>(const double& value) {
-  return mxCreateDoubleScalar(value);
+template <>
+mxArray *wrap<double>(const double &value)
+{
+    return mxCreateDoubleScalar(value);
 }
 
 // wrap a const Eigen vector into a double vector
-mxArray* wrap_Vector(const gtsam::Vector& v) {
-  int m = v.size();
-  mxArray *result = mxCreateDoubleMatrix(m, 1, mxREAL);
-  double *data = mxGetPr(result);
-  for (int i=0;i<m;i++) data[i]=v(i);
-  return result;
+mxArray *wrap_Vector(const gtsam::Vector &v)
+{
+    int m = v.size();
+    mxArray *result = mxCreateDoubleMatrix(m, 1, mxREAL);
+    double *data = mxGetPr(result);
+    for (int i = 0; i < m; i++)
+        data[i] = v(i);
+    return result;
 }
 
 // specialization to Eigen vector -> double vector
-template<>
-mxArray* wrap<gtsam::Vector >(const gtsam::Vector& v) {
-  return wrap_Vector(v);
+template <>
+mxArray *wrap<gtsam::Vector>(const gtsam::Vector &v)
+{
+    return wrap_Vector(v);
 }
 
 // specialization to Eigen vector -> double vector
-template<>
-mxArray* wrap<gtsam::Point2 >(const gtsam::Point2& v) {
-  return wrap_Vector(v);
+template <>
+mxArray *wrap<gtsam::Point2>(const gtsam::Point2 &v)
+{
+    return wrap_Vector(v);
 }
 
 // specialization to Eigen vector -> double vector
-template<>
-mxArray* wrap<gtsam::Point3 >(const gtsam::Point3& v) {
-  return wrap_Vector(v);
+template <>
+mxArray *wrap<gtsam::Point3>(const gtsam::Point3 &v)
+{
+    return wrap_Vector(v);
 }
 
 // wrap a const Eigen MATRIX into a double matrix
-mxArray* wrap_Matrix(const gtsam::Matrix& A) {
-  int m = A.rows(), n = A.cols();
+mxArray *wrap_Matrix(const gtsam::Matrix &A)
+{
+    int m = A.rows(), n = A.cols();
 #ifdef DEBUG_WRAP
-  mexPrintf("wrap_Matrix called with A = \n", m,n);
-  gtsam::print(A);
+    mexPrintf("wrap_Matrix called with A = \n", m, n);
+    gtsam::print(A);
 #endif
-  mxArray *result = mxCreateDoubleMatrix(m, n, mxREAL);
-  double *data = mxGetPr(result);
-  // converts from column-major to row-major
-  for (int j=0;j<n;j++) for (int i=0;i<m;i++,data++) *data = A(i,j);
-  return result;
+    mxArray *result = mxCreateDoubleMatrix(m, n, mxREAL);
+    double *data = mxGetPr(result);
+    // converts from column-major to row-major
+    for (int j = 0; j < n; j++)
+        for (int i = 0; i < m; i++, data++)
+            *data = A(i, j);
+    return result;
 }
 
 // specialization to Eigen MATRIX -> double matrix
-template<>
-mxArray* wrap<gtsam::Matrix >(const gtsam::Matrix& A) {
-  return wrap_Matrix(A);
+template <>
+mxArray *wrap<gtsam::Matrix>(const gtsam::Matrix &A)
+{
+    return wrap_Matrix(A);
 }
 
 /// @brief Wrap the C++ enum to Matlab mxArray
@@ -354,22 +421,24 @@ mxArray* wrap<gtsam::Matrix >(const gtsam::Matrix& A) {
 /// @param x C++ enum
 /// @param classname Matlab enum classdef used to call Matlab constructor
 template <typename T>
-mxArray* wrap_enum(const T x, const std::string& classname) {
-  // create double array to store value in
-  mxArray* a = mxCreateDoubleMatrix(1, 1, mxREAL);
-  double* data = mxGetPr(a);
-  data[0] = static_cast<double>(x);
+mxArray *wrap_enum(const T x, const std::string &classname)
+{
+    // create double array to store value in
+    mxArray *a = mxCreateDoubleMatrix(1, 1, mxREAL);
+    double *data = mxGetPr(a);
+    data[0] = static_cast<double>(x);
 
-  // convert to Matlab enumeration type
-  mxArray* result = 0;
+    // convert to Matlab enumeration type
+    mxArray *result = 0;
 
-  if (mexCallMATLAB(1, &result, 1, &a, classname.c_str()) != 0 || !result) {
+    if (mexCallMATLAB(1, &result, 1, &a, classname.c_str()) != 0 || !result)
+    {
+        mxDestroyArray(a);
+        gtwrap::MexErrMsgTxt("wrap: failed converting enum value to MATLAB enumeration");
+    }
     mxDestroyArray(a);
-    gtwrap::MexErrMsgTxt("wrap: failed converting enum value to MATLAB enumeration");
-  }
-  mxDestroyArray(a);
 
-  return result;
+    return result;
 }
 
 //*****************************************************************************
@@ -377,188 +446,217 @@ mxArray* wrap_enum(const T x, const std::string& classname) {
 //*****************************************************************************
 
 template <typename T>
-T myGetScalar(const mxArray* array);
+T myGetScalar(const mxArray *array);
 
 // default unwrapping throws an error
 // as wrap only supports passing a reference or one of the basic types
 template <typename T>
-T unwrap(const mxArray* array) {
-  if constexpr (std::is_integral<T>::value) {
-    checkScalar(array, "unwrap<integer>");
-    return myGetScalar<T>(array);
-  } else {
-    error("wrap internal error: attempted unwrap of invalid type");
-    return T();
-  }
+T unwrap(const mxArray *array)
+{
+    if constexpr (std::is_integral<T>::value)
+    {
+        checkScalar(array, "unwrap<integer>");
+        return myGetScalar<T>(array);
+    }
+    else
+    {
+        error("wrap internal error: attempted unwrap of invalid type");
+        return T();
+    }
 }
 
 /// @brief Unwrap from matlab array to C++ enum type
 /// @tparam T The C++ enum type
 /// @param array Matlab mxArray
 template <typename T>
-T unwrap_enum(const mxArray* array) {
-  // Make duplicate to remove const-ness
-  mxArray* a = mxDuplicateArray(array);
-  if (!a)
-    gtwrap::MexErrMsgTxt("wrap: failed duplicating MATLAB enum value");
+T unwrap_enum(const mxArray *array)
+{
+    // Make duplicate to remove const-ness
+    mxArray *a = mxDuplicateArray(array);
+    if (!a)
+        gtwrap::MexErrMsgTxt("wrap: failed duplicating MATLAB enum value");
 
-  // convert void* to int32* array
-  mxArray* a_int32 = 0;
-  if (mexCallMATLAB(1, &a_int32, 1, &a, "int32") != 0 || !a_int32) {
-    mxDestroyArray(a);
-    gtwrap::MexErrMsgTxt("wrap: failed converting MATLAB enum value to int32");
-  }
+    // convert void* to int32* array
+    mxArray *a_int32 = 0;
+    if (mexCallMATLAB(1, &a_int32, 1, &a, "int32") != 0 || !a_int32)
+    {
+        mxDestroyArray(a);
+        gtwrap::MexErrMsgTxt("wrap: failed converting MATLAB enum value to int32");
+    }
 
-  // Get the value in the input array
-  int32_T* value = (int32_T*)mxGetData(a_int32);
-  if (!value) {
+    // Get the value in the input array
+    int32_T *value = (int32_T *)mxGetData(a_int32);
+    if (!value)
+    {
+        mxDestroyArray(a_int32);
+        mxDestroyArray(a);
+        gtwrap::MexErrMsgTxt("wrap: failed reading MATLAB enum value");
+    }
+    // cast int32 to enum type
+    T result = static_cast<T>(*value);
     mxDestroyArray(a_int32);
     mxDestroyArray(a);
-    gtwrap::MexErrMsgTxt("wrap: failed reading MATLAB enum value");
-  }
-  // cast int32 to enum type
-  T result = static_cast<T>(*value);
-  mxDestroyArray(a_int32);
-  mxDestroyArray(a);
-  return result;
+    return result;
 }
 
 // specialization to string
 // expects a character array
 // Warning: relies on mxChar==char
-template<>
-string unwrap<string>(const mxArray* array) {
-  char *data = mxArrayToString(array);
-  if (data==NULL) error("unwrap<string>: not a character array");
-  string str(data);
-  mxFree(data);
-  return str;
+template <>
+string unwrap<string>(const mxArray *array)
+{
+    char *data = mxArrayToString(array);
+    if (data == NULL)
+        error("unwrap<string>: not a character array");
+    string str(data);
+    mxFree(data);
+    return str;
 }
 
 // Check for 64-bit, as Mathworks says mxGetScalar only good for 32 bit
 template <typename T>
-T myGetScalar(const mxArray* array) {
-  switch (mxGetClassID(array)) {
+T myGetScalar(const mxArray *array)
+{
+    switch (mxGetClassID(array))
+    {
     case mxINT64_CLASS:
-      return (T) *(std::int64_t*) mxGetData(array);
+        return (T) * (std::int64_t *)mxGetData(array);
     case mxUINT64_CLASS:
-      return (T) *(std::uint64_t*) mxGetData(array);
+        return (T) * (std::uint64_t *)mxGetData(array);
     default:
-      // hope for the best!
-      return (T) mxGetScalar(array);
-  }
+        // hope for the best!
+        return (T)mxGetScalar(array);
+    }
 }
 
 // specialization to bool
-template<>
-bool unwrap<bool>(const mxArray* array) {
-  checkScalar(array,"unwrap<bool>");
-  return myGetScalar<bool>(array);
+template <>
+bool unwrap<bool>(const mxArray *array)
+{
+    checkScalar(array, "unwrap<bool>");
+    return myGetScalar<bool>(array);
 }
 
 // specialization to char
-template<>
-char unwrap<char>(const mxArray* array) {
-  checkScalar(array,"unwrap<char>");
-  return myGetScalar<char>(array);
+template <>
+char unwrap<char>(const mxArray *array)
+{
+    checkScalar(array, "unwrap<char>");
+    return myGetScalar<char>(array);
 }
 
 // specialization to unsigned char
-template<>
-unsigned char unwrap<unsigned char>(const mxArray* array) {
-  checkScalar(array,"unwrap<unsigned char>");
-  return myGetScalar<unsigned char>(array);
+template <>
+unsigned char unwrap<unsigned char>(const mxArray *array)
+{
+    checkScalar(array, "unwrap<unsigned char>");
+    return myGetScalar<unsigned char>(array);
 }
 
 // specialization to int
-template<>
-int unwrap<int>(const mxArray* array) {
-  checkScalar(array,"unwrap<int>");
-  return myGetScalar<int>(array);
+template <>
+int unwrap<int>(const mxArray *array)
+{
+    checkScalar(array, "unwrap<int>");
+    return myGetScalar<int>(array);
 }
 
 // specialization to size_t
-template<>
-size_t unwrap<size_t>(const mxArray* array) {
-  checkScalar(array, "unwrap<size_t>");
-  return myGetScalar<size_t>(array);
+template <>
+size_t unwrap<size_t>(const mxArray *array)
+{
+    checkScalar(array, "unwrap<size_t>");
+    return myGetScalar<size_t>(array);
 }
 
 // specialization to double
-template<>
-double unwrap<double>(const mxArray* array) {
-  checkScalar(array,"unwrap<double>");
-  return myGetScalar<double>(array);
+template <>
+double unwrap<double>(const mxArray *array)
+{
+    checkScalar(array, "unwrap<double>");
+    return myGetScalar<double>(array);
 }
 
 // specialization to Eigen vector
-template<>
-gtsam::Vector unwrap< gtsam::Vector >(const mxArray* array) {
-  int m = mxGetM(array), n = mxGetN(array);
-  if (mxIsDouble(array)==false || n!=1) error("unwrap<vector>: not a vector");
+template <>
+gtsam::Vector unwrap<gtsam::Vector>(const mxArray *array)
+{
+    int m = mxGetM(array), n = mxGetN(array);
+    if (mxIsDouble(array) == false || n != 1)
+        error("unwrap<vector>: not a vector");
 #ifdef DEBUG_WRAP
-  mexPrintf("unwrap< gtsam::Vector > called with %dx%d argument\n", m,n);
+    mexPrintf("unwrap< gtsam::Vector > called with %dx%d argument\n", m, n);
 #endif
-  double* data = (double*)mxGetData(array);
-  gtsam::Vector v(m);
-  for (int i=0;i<m;i++,data++) v(i) = *data;
+    double *data = (double *)mxGetData(array);
+    gtsam::Vector v(m);
+    for (int i = 0; i < m; i++, data++)
+        v(i) = *data;
 #ifdef DEBUG_WRAP
-  gtsam::print(v);
+    gtsam::print(v);
 #endif
-  return v;
+    return v;
 }
 
 // specialization to Point2
-template<>
-gtsam::Point2 unwrap< gtsam::Point2 >(const mxArray* array) {
-  int m = mxGetM(array), n = mxGetN(array);
-  if (mxIsDouble(array)==false || n!=1) error("unwrap<vector>: not a vector");
+template <>
+gtsam::Point2 unwrap<gtsam::Point2>(const mxArray *array)
+{
+    int m = mxGetM(array), n = mxGetN(array);
+    if (mxIsDouble(array) == false || n != 1)
+        error("unwrap<vector>: not a vector");
 #ifdef DEBUG_WRAP
-  mexPrintf("unwrap< gtsam::Vector > called with %dx%d argument\n", m,n);
+    mexPrintf("unwrap< gtsam::Vector > called with %dx%d argument\n", m, n);
 #endif
-  double* data = (double*)mxGetData(array);
-  gtsam::Vector v(m);
-  for (int i=0;i<m;i++,data++) v(i) = *data;
+    double *data = (double *)mxGetData(array);
+    gtsam::Vector v(m);
+    for (int i = 0; i < m; i++, data++)
+        v(i) = *data;
 #ifdef DEBUG_WRAP
-  gtsam::print(v);
+    gtsam::print(v);
 #endif
-  return v;
+    return v;
 }
 
 // specialization to Point3
-template<>
-gtsam::Point3 unwrap< gtsam::Point3 >(const mxArray* array) {
-  int m = mxGetM(array), n = mxGetN(array);
-  if (mxIsDouble(array)==false || n!=1) error("unwrap<vector>: not a vector");
+template <>
+gtsam::Point3 unwrap<gtsam::Point3>(const mxArray *array)
+{
+    int m = mxGetM(array), n = mxGetN(array);
+    if (mxIsDouble(array) == false || n != 1)
+        error("unwrap<vector>: not a vector");
 #ifdef DEBUG_WRAP
-  mexPrintf("unwrap< gtsam::Vector > called with %dx%d argument\n", m,n);
+    mexPrintf("unwrap< gtsam::Vector > called with %dx%d argument\n", m, n);
 #endif
-  double* data = (double*)mxGetData(array);
-  gtsam::Vector v(m);
-  for (int i=0;i<m;i++,data++) v(i) = *data;
+    double *data = (double *)mxGetData(array);
+    gtsam::Vector v(m);
+    for (int i = 0; i < m; i++, data++)
+        v(i) = *data;
 #ifdef DEBUG_WRAP
-  gtsam::print(v);
+    gtsam::print(v);
 #endif
-  return v;
+    return v;
 }
 
-
 // specialization to Eigen matrix
-template<>
-gtsam::Matrix unwrap< gtsam::Matrix >(const mxArray* array) {
-  if (mxIsDouble(array)==false) error("unwrap<matrix>: not a matrix");
-  int m = mxGetM(array), n = mxGetN(array);
+template <>
+gtsam::Matrix unwrap<gtsam::Matrix>(const mxArray *array)
+{
+    if (mxIsDouble(array) == false)
+        error("unwrap<matrix>: not a matrix");
+    int m = mxGetM(array), n = mxGetN(array);
 #ifdef DEBUG_WRAP
-  mexPrintf("unwrap< gtsam::Matrix > called with %dx%d argument\n", m,n);
+    mexPrintf("unwrap< gtsam::Matrix > called with %dx%d argument\n", m, n);
 #endif
-  double* data = (double*)mxGetData(array);
-  gtsam::Matrix A(m,n);
-  // converts from row-major to column-major
-  for (int j=0;j<n;j++) for (int i=0;i<m;i++,data++) A(i,j) = *data;
+    double *data = (double *)mxGetData(array);
+    gtsam::Matrix A(m, n);
+    // converts from row-major to column-major
+    for (int j = 0; j < n; j++)
+        for (int i = 0; i < m; i++, data++)
+            A(i, j) = *data;
 #ifdef DEBUG_WRAP
-  gtsam::print(A);
+    gtsam::print(A);
 #endif
-  return A;
+    return A;
 }
 
 /*
@@ -574,80 +672,93 @@ gtsam::Matrix unwrap< gtsam::Matrix >(const mxArray* array) {
  order to be able to add to the collector could be in a different wrap
  module.
 */
-mxArray* create_object(
-    const std::string& classname,
+mxArray *create_object(
+    const std::string &classname,
     void *pointer,
     bool isVirtual,
     const char *rttiName,
-    mxArray** constructionError = nullptr) {
-  mxArray *result = nullptr;
-  mxArray *input[3] = {nullptr, nullptr, nullptr};
-  int nargin = 2;
-  // First input argument is pointer constructor key
-  input[0] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
-  *reinterpret_cast<std::uint64_t*>(mxGetData(input[0])) = ptr_constructor_key;
-  // Second input argument is the pointer
-  input[1] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
-  *reinterpret_cast<void**>(mxGetData(input[1])) = pointer;
-  // If the class is virtual, use the RTTI name to look up the derived matlab type
-  const char *derivedClassName;
-  if(isVirtual) {
-    const mxArray *rttiRegistry = mexGetVariablePtr("global", "gtsamwrap_rttiRegistry");
-    if(!rttiRegistry) {
-      gtwrap::DestroyArray(input[0]);
-      gtwrap::DestroyArray(input[1]);
-      gtwrap::MexErrMsgTxt(
-      "wrap:  RTTI registry is missing - it could have been cleared from the workspace."
-      "  You can issue 'clear all' to completely clear the workspace, and next time a wrapped object is"
-      " created the RTTI registry will be recreated.");
+    mxArray **constructionError = nullptr)
+{
+    mxArray *result = nullptr;
+    mxArray *input[3] = {nullptr, nullptr, nullptr};
+    int nargin = 2;
+    // First input argument is pointer constructor key
+    input[0] = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
+    *reinterpret_cast<std::uint64_t *>(mxGetData(input[0])) = ptr_constructor_key;
+    // Second input argument is the pointer
+    input[1] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
+    *reinterpret_cast<void **>(mxGetData(input[1])) = pointer;
+    // If the class is virtual, use the RTTI name to look up the derived matlab type
+    const char *derivedClassName;
+    if (isVirtual)
+    {
+        const mxArray *rttiRegistry = mexGetVariablePtr("global", "gtsamwrap_rttiRegistry");
+        if (!rttiRegistry)
+        {
+            gtwrap::DestroyArray(input[0]);
+            gtwrap::DestroyArray(input[1]);
+            gtwrap::MexErrMsgTxt(
+                "wrap:  RTTI registry is missing - it could have been cleared from the workspace."
+                "  You can issue 'clear all' to completely clear the workspace, and next time a wrapped object is"
+                " created the RTTI registry will be recreated.");
+        }
+        const mxArray *derivedNameMx = mxGetField(rttiRegistry, 0, rttiName);
+        if (!derivedNameMx)
+        {
+            gtwrap::DestroyArray(input[0]);
+            gtwrap::DestroyArray(input[1]);
+            gtwrap::MexErrMsgTxt((
+                                     "wrap:  The derived class type " + string(rttiName) + " was not found in the RTTI registry.  "
+                                                                                           "Try calling 'clear all' twice consecutively - we have seen things not get unloaded properly the "
+                                                                                           "first time.  If this does not work, this may indicate an inconsistency in your wrap interface file.  "
+                                                                                           "The most likely cause for this is that a base class was marked virtual in the wrap interface "
+                                                                                           "definition header file for your module, but a derived type was returned by a C++ "
+                                                                                           "function and that derived type was not marked virtual (or was not specified in the wrap interface "
+                                                                                           "definition header at all).")
+                                     .c_str());
+        }
+        size_t strLen = mxGetN(derivedNameMx);
+        char *buf = new char[strLen + 1];
+        if (mxGetString(derivedNameMx, buf, strLen + 1))
+        {
+            delete[] buf;
+            gtwrap::DestroyArray(input[0]);
+            gtwrap::DestroyArray(input[1]);
+            gtwrap::MexErrMsgTxt("wrap:  Internal error reading RTTI table, try 'clear all' to clear your workspace and reinitialize the toolbox.");
+        }
+        derivedClassName = buf;
+        input[2] = mxCreateString("void");
+        nargin = 3;
     }
-    const mxArray *derivedNameMx = mxGetField(rttiRegistry, 0, rttiName);
-    if(!derivedNameMx) {
-      gtwrap::DestroyArray(input[0]);
-      gtwrap::DestroyArray(input[1]);
-      gtwrap::MexErrMsgTxt((
-      "wrap:  The derived class type " + string(rttiName) + " was not found in the RTTI registry.  "
-      "Try calling 'clear all' twice consecutively - we have seen things not get unloaded properly the "
-      "first time.  If this does not work, this may indicate an inconsistency in your wrap interface file.  "
-      "The most likely cause for this is that a base class was marked virtual in the wrap interface "
-      "definition header file for your module, but a derived type was returned by a C++ "
-      "function and that derived type was not marked virtual (or was not specified in the wrap interface "
-      "definition header at all).").c_str());
+    else
+    {
+        derivedClassName = classname.c_str();
     }
-    size_t strLen = mxGetN(derivedNameMx);
-    char *buf = new char[strLen+1];
-    if(mxGetString(derivedNameMx, buf, strLen+1)) {
-      delete[] buf;
-      gtwrap::DestroyArray(input[0]);
-      gtwrap::DestroyArray(input[1]);
-      gtwrap::MexErrMsgTxt("wrap:  Internal error reading RTTI table, try 'clear all' to clear your workspace and reinitialize the toolbox.");
+    // Call special pointer constructor, which sets 'self'
+    mxArray *exception =
+        mexCallMATLABWithTrap(1, &result, nargin, input, derivedClassName);
+    // Deallocate our memory
+    gtwrap::DestroyArray(input[0]);
+    gtwrap::DestroyArray(input[1]);
+    if (isVirtual)
+    {
+        gtwrap::DestroyArray(input[2]);
+        delete[] derivedClassName;
     }
-    derivedClassName = buf;
-    input[2] = mxCreateString("void");
-    nargin = 3;
-  } else {
-    derivedClassName = classname.c_str();
-  }
-  // Call special pointer constructor, which sets 'self'
-  mxArray* exception =
-    mexCallMATLABWithTrap(1, &result, nargin, input, derivedClassName);
-  // Deallocate our memory
-  gtwrap::DestroyArray(input[0]);
-  gtwrap::DestroyArray(input[1]);
-  if(isVirtual) {
-    gtwrap::DestroyArray(input[2]);
-    delete[] derivedClassName;
-  }
-  if(exception || !result) {
-    if(constructionError) {
-      *constructionError = exception;
-    } else {
-      gtwrap::ReportMatlabException(
-        exception, "wrap: failed constructing MATLAB proxy object");
+    if (exception || !result)
+    {
+        if (constructionError)
+        {
+            *constructionError = exception;
+        }
+        else
+        {
+            gtwrap::ReportMatlabException(
+                exception, "wrap: failed constructing MATLAB proxy object");
+        }
+        return nullptr;
     }
-    return nullptr;
-  }
-  return result;
+    return result;
 }
 
 /*
@@ -656,83 +767,90 @@ mxArray* create_object(
  class to matlab.
 */
 template <typename Class>
-mxArray* wrap_shared_ptr(std::shared_ptr< Class > shared_ptr, const std::string& matlabName, bool isVirtual) {
-  // Create actual class object from out pointer
-  mxArray* result;
-  if(isVirtual) {
-    std::shared_ptr<void> void_ptr(shared_ptr);
-    result = create_object(matlabName, &void_ptr, isVirtual, typeid(*shared_ptr).name());
-  } else {
-    std::shared_ptr<Class> *heapPtr = new std::shared_ptr<Class>(shared_ptr);
-    mexLock();
-    mxArray* exception = nullptr;
-    result = create_object(matlabName, heapPtr, isVirtual, "", &exception);
-    if(exception || !result) {
-      delete heapPtr;
-      mexUnlock();
-      gtwrap::ReportMatlabException(
-        exception, "wrap: failed constructing MATLAB proxy object");
+mxArray *wrap_shared_ptr(std::shared_ptr<Class> shared_ptr, const std::string &matlabName, bool isVirtual)
+{
+    // Create actual class object from out pointer
+    mxArray *result;
+    if (isVirtual)
+    {
+        std::shared_ptr<void> void_ptr(shared_ptr);
+        result = create_object(matlabName, &void_ptr, isVirtual, typeid(*shared_ptr).name());
     }
-  }
-  return result;
+    else
+    {
+        std::shared_ptr<Class> *heapPtr = new std::shared_ptr<Class>(shared_ptr);
+        mexLock();
+        mxArray *exception = nullptr;
+        result = create_object(matlabName, heapPtr, isVirtual, "", &exception);
+        if (exception || !result)
+        {
+            delete heapPtr;
+            mexUnlock();
+            gtwrap::ReportMatlabException(
+                exception, "wrap: failed constructing MATLAB proxy object");
+        }
+    }
+    return result;
 }
 
 template <typename Class>
-std::shared_ptr<Class> unwrap_shared_ptr(const mxArray* obj, const string& propertyName) {
+std::shared_ptr<Class> unwrap_shared_ptr(const mxArray *obj, const string &propertyName)
+{
 
-  if (!obj)
-    error("Parameter is not an Shared type: null MATLAB object.");
-  mxArray* mxh = mxGetProperty(obj,0, propertyName.c_str());
-  if (!mxh)
-    error(("Parameter is not an Shared type: missing property " + propertyName + ".").c_str());
-  if (mxGetClassID(mxh) != mxUINT32OR64_CLASS || mxIsComplex(mxh)
-    || mxGetM(mxh) != 1 || mxGetN(mxh) != 1) error(
-    "Parameter is not an Shared type.");
+    if (!obj)
+        error("Parameter is not an Shared type: null MATLAB object.");
+    mxArray *mxh = mxGetProperty(obj, 0, propertyName.c_str());
+    if (!mxh)
+        error(("Parameter is not an Shared type: missing property " + propertyName + ".").c_str());
+    if (mxGetClassID(mxh) != mxUINT32OR64_CLASS || mxIsComplex(mxh) || mxGetM(mxh) != 1 || mxGetN(mxh) != 1)
+        error(
+            "Parameter is not an Shared type.");
 
-  if (!mxGetData(mxh))
-    error("Parameter is not an Shared type: null pointer storage.");
-  std::shared_ptr<Class>* spp = *reinterpret_cast<std::shared_ptr<Class>**> (mxGetData(mxh));
-  if (!spp)
-    error("Parameter is not an Shared type: null shared pointer.");
-  return *spp;
+    if (!mxGetData(mxh))
+        error("Parameter is not an Shared type: null pointer storage.");
+    std::shared_ptr<Class> *spp = *reinterpret_cast<std::shared_ptr<Class> **>(mxGetData(mxh));
+    if (!spp)
+        error("Parameter is not an Shared type: null shared pointer.");
+    return *spp;
 }
 
 template <typename Class>
-Class* unwrap_ptr(const mxArray* obj, const string& propertyName) {
+Class *unwrap_ptr(const mxArray *obj, const string &propertyName)
+{
 
-  if (!obj)
-    error("Parameter is not a pointer type: null MATLAB object.");
-  mxArray* mxh = mxGetProperty(obj,0, propertyName.c_str());
-  if (!mxh)
-    error(("Parameter is not a pointer type: missing property " + propertyName + ".").c_str());
-  if (mxGetClassID(mxh) != mxUINT32OR64_CLASS || mxIsComplex(mxh)
-    || mxGetM(mxh) != 1 || mxGetN(mxh) != 1) error(
-    "Parameter is not a pointer type.");
-  if (!mxGetData(mxh))
-    error("Parameter is not a pointer type: null pointer storage.");
-  // The handle stores a heap-allocated std::shared_ptr<Class>* (see the
-  // constructor collectors and unwrap_shared_ptr). Dereference it and return
-  // the owned raw pointer; reinterpreting the storage address itself as a
-  // Class* would hand back garbage.
-  std::shared_ptr<Class>* spp =
-    *reinterpret_cast<std::shared_ptr<Class>**>(mxGetData(mxh));
-  if (!spp)
-    error("Parameter is not a pointer type: null shared pointer.");
-  return spp->get();
+    if (!obj)
+        error("Parameter is not a pointer type: null MATLAB object.");
+    mxArray *mxh = mxGetProperty(obj, 0, propertyName.c_str());
+    if (!mxh)
+        error(("Parameter is not a pointer type: missing property " + propertyName + ".").c_str());
+    if (mxGetClassID(mxh) != mxUINT32OR64_CLASS || mxIsComplex(mxh) || mxGetM(mxh) != 1 || mxGetN(mxh) != 1)
+        error(
+            "Parameter is not a pointer type.");
+    if (!mxGetData(mxh))
+        error("Parameter is not a pointer type: null pointer storage.");
+    // The handle stores a heap-allocated std::shared_ptr<Class>* (see the
+    // constructor collectors and unwrap_shared_ptr). Dereference it and return
+    // the owned raw pointer; reinterpreting the storage address itself as a
+    // Class* would hand back garbage.
+    std::shared_ptr<Class> *spp =
+        *reinterpret_cast<std::shared_ptr<Class> **>(mxGetData(mxh));
+    if (!spp)
+        error("Parameter is not a pointer type: null shared pointer.");
+    return spp->get();
 }
 
 //// throw an error if unwrap_shared_ptr is attempted for an Eigen Vector
-//template <>
-//Vector unwrap_shared_ptr<Vector>(const mxArray* obj, const string& propertyName) {
-//  bool unwrap_shared_ptr_Vector_attempted = false;
-//  static_assert(unwrap_shared_ptr_Vector_attempted, "Vector cannot be unwrapped as a shared pointer");
-//  return Vector();
-//}
+// template <>
+// Vector unwrap_shared_ptr<Vector>(const mxArray* obj, const string& propertyName) {
+//   bool unwrap_shared_ptr_Vector_attempted = false;
+//   static_assert(unwrap_shared_ptr_Vector_attempted, "Vector cannot be unwrapped as a shared pointer");
+//   return Vector();
+// }
 
 //// throw an error if unwrap_shared_ptr is attempted for an Eigen Matrix
-//template <>
-//Matrix unwrap_shared_ptr<Matrix>(const mxArray* obj, const string& propertyName) {
-//  bool unwrap_shared_ptr_Matrix_attempted = false;
-//  static_assert(unwrap_shared_ptr_Matrix_attempted, "Matrix cannot be unwrapped as a shared pointer");
-//  return Matrix();
-//}
+// template <>
+// Matrix unwrap_shared_ptr<Matrix>(const mxArray* obj, const string& propertyName) {
+//   bool unwrap_shared_ptr_Matrix_attempted = false;
+//   static_assert(unwrap_shared_ptr_Matrix_attempted, "Matrix cannot be unwrapped as a shared pointer");
+//   return Matrix();
+// }
