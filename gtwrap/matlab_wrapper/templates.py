@@ -143,7 +143,7 @@ class WrapperTemplate:
     collector_function_shared_return = textwrap.indent(textwrap.dedent('''\
             {{
             std::shared_ptr<{name}> shared({shared_obj});
-            out[{id}] = wrap_shared_ptr({ctx}shared,"{name}");
+            out[{id}] = wrap_shared_ptr({ctx}shared,"{name}", false);
             }}{new_line}'''),
                                                        prefix='  ')
 
