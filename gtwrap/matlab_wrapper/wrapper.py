@@ -131,12 +131,30 @@ class MatlabWrapper(CheckMixin, FormatMixin):
         dir_path = osp.dirname(osp.realpath(__file__))
         # Check for pre-configured matlab_template.tpl file
         configured_template_path = osp.join(dir_path, "matlab_wrapper.tpl")
+
+        # We expect `<wrap/...>` in source trees where `matlab.h` sits next to
+        # the wrapper package. In a previously configured source checkout, this
+        # file can still contain a stale `<gtwrap/...>` include. In that case,
+        # regenerate from the source `.in` template to keep generated wrappers
+        # aligned with current runtime behavior.
+        wrap_root = osp.dirname(osp.dirname(dir_path))
+        expected_include_name = "gtwrap"
+        if osp.exists(osp.join(wrap_root, "matlab.h")):
+            expected_include_name = osp.basename(wrap_root)
+
         if osp.exists(configured_template_path):
             with open(configured_template_path, encoding="UTF-8") as f:
-                return f.read()  # Return if present
+                configured = f.read()
+            if expected_include_name != "gtwrap" and \
+               "#include <gtwrap/matlab.h>" in configured:
+                # Override a stale source-file emission from a previous CMake
+                # cache configuration. This prevents accidentally pulling in
+                # an older globally installed header set.
+                pass
+            else:
+                return configured
 
         # If no pre-configured available, then search for template file to configure
-        wrap_root = osp.dirname(osp.dirname(dir_path))
         template_in_path = osp.join(
             wrap_root, "templates", "matlab_wrapper.tpl.in")
 

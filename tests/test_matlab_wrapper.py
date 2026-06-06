@@ -89,6 +89,13 @@ class TestWrap(unittest.TestCase):
                 osp.join(osp.basename(temp_dir), "gtwrap_install"), False)
             local_wrapper_path = self._make_fallback_template_root(
                 osp.join(osp.basename(temp_dir), "wrap"), True)
+            stale_wrapper_path = self._make_fallback_template_root(
+                osp.join(osp.basename(temp_dir), "stale"), True)
+            stale_tpl = osp.join(
+                osp.dirname(stale_wrapper_path),
+                "matlab_wrapper.tpl")
+            with open(stale_tpl, "w", encoding="UTF-8") as tpl:
+                tpl.write("#include <gtwrap/matlab.h>\n#include <map>\n")
 
             with mock.patch.object(matlab_wrapper_module, "__file__", install_wrapper_path):
                 install_headers = MatlabWrapper._load_wrapper_file_headers()
@@ -99,6 +106,11 @@ class TestWrap(unittest.TestCase):
                 local_headers = MatlabWrapper._load_wrapper_file_headers()
             self.assertEqual(local_headers.splitlines()[
                              0], "#include <wrap/matlab.h>")
+
+            with mock.patch.object(matlab_wrapper_module, "__file__", stale_wrapper_path):
+                stale_headers = MatlabWrapper._load_wrapper_file_headers()
+            self.assertEqual(stale_headers.splitlines()[
+                             0], "#include <stale/matlab.h>")
 
     def test_matrix_view_arguments(self):
         """Test that matrix view arguments use MATLAB double arrays directly."""

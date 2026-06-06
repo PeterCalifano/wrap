@@ -54,7 +54,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/gtwrapConfig.cmake
 # either gtwrap/matlab.h, wrap/matlab.h or something custom.
 if(NOT DEFINED GTWRAP_INCLUDE_NAME)
   set(GTWRAP_INCLUDE_NAME
-      "gtwrap"
+      "wrap"
       CACHE INTERNAL "Directory name for Matlab includes")
 endif()
 
@@ -77,6 +77,7 @@ install(PROGRAMS scripts/pybind_wrap.py scripts/matlab_wrap.py
 
 # Install the matlab.h (legacy C MEX API) and matlab_cpp.h (modern C++ MEX API) runtime headers to `CMAKE_INSTALL_PREFIX/lib/gtwrap/`.
 install(FILES matlab.h matlab_cpp.h DESTINATION "${GTWRAP_INCLUDE_INSTALL_DIR}")
+install(FILES matlab.h matlab_cpp.h DESTINATION "include/wrap")
 
 string(ASCII 27 Esc)
 set(gtwrap "${Esc}[1;36mgtwrap${Esc}[m")
