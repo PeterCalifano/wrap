@@ -92,6 +92,7 @@ void Pet_constructor_1(int nargout, mxArray *out[], int nargin, const mxArray *i
   Pet::Kind type = unwrap_enum<Pet::Kind>(in[1]);
   Shared *self = new Shared(new Pet(name,type));
   collector_Pet.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -103,10 +104,12 @@ void Pet_deconstructor_2(int nargout, mxArray *out[], int nargin, const mxArray 
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_Pet::iterator item;
   item = collector_Pet.find(self);
-  if(item != collector_Pet.end()) {
-    collector_Pet.erase(item);
+  if(item == collector_Pet.end()) {
+    return;
   }
+  collector_Pet.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void Pet_getColor_3(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -170,6 +173,7 @@ void gtsamMCU_constructor_10(int nargout, mxArray *out[], int nargin, const mxAr
 
   Shared *self = new Shared(new gtsam::MCU());
   collector_gtsamMCU.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -181,10 +185,12 @@ void gtsamMCU_deconstructor_11(int nargout, mxArray *out[], int nargin, const mx
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_gtsamMCU::iterator item;
   item = collector_gtsamMCU.find(self);
-  if(item != collector_gtsamMCU.end()) {
-    collector_gtsamMCU.erase(item);
+  if(item == collector_gtsamMCU.end()) {
+    return;
   }
+  collector_gtsamMCU.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void gtsamOptimizerGaussNewtonParams_collectorInsertAndMakeBase_12(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -204,6 +210,7 @@ void gtsamOptimizerGaussNewtonParams_constructor_13(int nargout, mxArray *out[],
   Optimizer<gtsam::GaussNewtonParams>::Verbosity verbosity = unwrap_enum<Optimizer<gtsam::GaussNewtonParams>::Verbosity>(in[0]);
   Shared *self = new Shared(new gtsam::Optimizer<gtsam::GaussNewtonParams>(verbosity));
   collector_gtsamOptimizerGaussNewtonParams.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -215,10 +222,12 @@ void gtsamOptimizerGaussNewtonParams_deconstructor_14(int nargout, mxArray *out[
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_gtsamOptimizerGaussNewtonParams::iterator item;
   item = collector_gtsamOptimizerGaussNewtonParams.find(self);
-  if(item != collector_gtsamOptimizerGaussNewtonParams.end()) {
-    collector_gtsamOptimizerGaussNewtonParams.erase(item);
+  if(item == collector_gtsamOptimizerGaussNewtonParams.end()) {
+    return;
   }
+  collector_gtsamOptimizerGaussNewtonParams.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void gtsamOptimizerGaussNewtonParams_getVerbosity_15(int nargout, mxArray *out[], int nargin, const mxArray *in[])

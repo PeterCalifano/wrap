@@ -324,8 +324,13 @@ mxArray* wrap_enum(const T x, const std::string& classname) {
   data[0] = static_cast<double>(x);
 
   // convert to Matlab enumeration type
-  mxArray* result;
-  mexCallMATLAB(1, &result, 1, &a, classname.c_str());
+  mxArray* result = 0;
+
+  if (mexCallMATLAB(1, &result, 1, &a, classname.c_str()) != 0 || !result) {
+    mxDestroyArray(a);
+    gtwrap::MexErrMsgTxt("wrap: failed converting enum value to MATLAB enumeration");
+  }
+  mxDestroyArray(a);
 
   return result;
 }
@@ -357,15 +362,28 @@ template <typename T>
 T unwrap_enum(const mxArray* array) {
   // Make duplicate to remove const-ness
   mxArray* a = mxDuplicateArray(array);
+  if (!a)
+    gtwrap::MexErrMsgTxt("wrap: failed duplicating MATLAB enum value");
 
   // convert void* to int32* array
-  mxArray* a_int32;
-  mexCallMATLAB(1, &a_int32, 1, &a, "int32");
+  mxArray* a_int32 = 0;
+  if (mexCallMATLAB(1, &a_int32, 1, &a, "int32") != 0 || !a_int32) {
+    mxDestroyArray(a);
+    gtwrap::MexErrMsgTxt("wrap: failed converting MATLAB enum value to int32");
+  }
 
   // Get the value in the input array
   int32_T* value = (int32_T*)mxGetData(a_int32);
+  if (!value) {
+    mxDestroyArray(a_int32);
+    mxDestroyArray(a);
+    gtwrap::MexErrMsgTxt("wrap: failed reading MATLAB enum value");
+  }
   // cast int32 to enum type
-  return static_cast<T>(*value);
+  T result = static_cast<T>(*value);
+  mxDestroyArray(a_int32);
+  mxDestroyArray(a);
+  return result;
 }
 
 // specialization to string
@@ -584,6 +602,7 @@ mxArray* wrap_shared_ptr(std::shared_ptr< Class > shared_ptr, const std::string&
     result = create_object(matlabName, &void_ptr, isVirtual, typeid(*shared_ptr).name());
   } else {
     std::shared_ptr<Class> *heapPtr = new std::shared_ptr<Class>(shared_ptr);
+    mexLock();
     result = create_object(matlabName, heapPtr, isVirtual, "");
   }
   return result;
@@ -622,8 +641,15 @@ Class* unwrap_ptr(const mxArray* obj, const string& propertyName) {
     "Parameter is not a pointer type.");
   if (!mxGetData(mxh))
     error("Parameter is not a pointer type: null pointer storage.");
-  Class* x = reinterpret_cast<Class*> (mxGetData(mxh));
-  return x;
+  // The handle stores a heap-allocated std::shared_ptr<Class>* (see the
+  // constructor collectors and unwrap_shared_ptr). Dereference it and return
+  // the owned raw pointer; reinterpreting the storage address itself as a
+  // Class* would hand back garbage.
+  std::shared_ptr<Class>* spp =
+    *reinterpret_cast<std::shared_ptr<Class>**>(mxGetData(mxh));
+  if (!spp)
+    error("Parameter is not a pointer type: null shared pointer.");
+  return spp->get();
 }
 
 //// throw an error if unwrap_shared_ptr is attempted for an Eigen Vector

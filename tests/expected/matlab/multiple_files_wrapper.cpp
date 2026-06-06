@@ -90,6 +90,7 @@ void gtsamClass1_constructor_1(int nargout, mxArray *out[], int nargin, const mx
 
   Shared *self = new Shared(new gtsam::Class1());
   collector_gtsamClass1.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -101,10 +102,12 @@ void gtsamClass1_deconstructor_2(int nargout, mxArray *out[], int nargin, const 
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_gtsamClass1::iterator item;
   item = collector_gtsamClass1.find(self);
-  if(item != collector_gtsamClass1.end()) {
-    collector_gtsamClass1.erase(item);
+  if(item == collector_gtsamClass1.end()) {
+    return;
   }
+  collector_gtsamClass1.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void gtsamClass2_collectorInsertAndMakeBase_3(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -123,6 +126,7 @@ void gtsamClass2_constructor_4(int nargout, mxArray *out[], int nargin, const mx
 
   Shared *self = new Shared(new gtsam::Class2());
   collector_gtsamClass2.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -134,10 +138,12 @@ void gtsamClass2_deconstructor_5(int nargout, mxArray *out[], int nargin, const 
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_gtsamClass2::iterator item;
   item = collector_gtsamClass2.find(self);
-  if(item != collector_gtsamClass2.end()) {
-    collector_gtsamClass2.erase(item);
+  if(item == collector_gtsamClass2.end()) {
+    return;
   }
+  collector_gtsamClass2.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void gtsamClassA_collectorInsertAndMakeBase_6(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -156,6 +162,7 @@ void gtsamClassA_constructor_7(int nargout, mxArray *out[], int nargin, const mx
 
   Shared *self = new Shared(new gtsam::ClassA());
   collector_gtsamClassA.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -167,10 +174,12 @@ void gtsamClassA_deconstructor_8(int nargout, mxArray *out[], int nargin, const 
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_gtsamClassA::iterator item;
   item = collector_gtsamClassA.find(self);
-  if(item != collector_gtsamClassA.end()) {
-    collector_gtsamClassA.erase(item);
+  if(item == collector_gtsamClassA.end()) {
+    return;
   }
+  collector_gtsamClassA.erase(item);
   delete self;
+  mexUnlock();
 }
 
 

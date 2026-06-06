@@ -89,6 +89,7 @@ void gtsamPoint2_constructor_1(int nargout, mxArray *out[], int nargin, const mx
 
   Shared *self = new Shared(new gtsam::Point2());
   collector_gtsamPoint2.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -102,6 +103,7 @@ void gtsamPoint2_constructor_2(int nargout, mxArray *out[], int nargin, const mx
   double y = unwrap< double >(in[1]);
   Shared *self = new Shared(new gtsam::Point2(x,y));
   collector_gtsamPoint2.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -113,10 +115,12 @@ void gtsamPoint2_deconstructor_3(int nargout, mxArray *out[], int nargin, const 
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_gtsamPoint2::iterator item;
   item = collector_gtsamPoint2.find(self);
-  if(item != collector_gtsamPoint2.end()) {
-    collector_gtsamPoint2.erase(item);
+  if(item == collector_gtsamPoint2.end()) {
+    return;
   }
+  collector_gtsamPoint2.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void gtsamPoint2_argChar_4(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -246,6 +250,7 @@ void gtsamPoint3_constructor_19(int nargout, mxArray *out[], int nargin, const m
   double z = unwrap< double >(in[2]);
   Shared *self = new Shared(new gtsam::Point3(x,y,z));
   collector_gtsamPoint3.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -257,10 +262,12 @@ void gtsamPoint3_deconstructor_20(int nargout, mxArray *out[], int nargin, const
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_gtsamPoint3::iterator item;
   item = collector_gtsamPoint3.find(self);
-  if(item != collector_gtsamPoint3.end()) {
-    collector_gtsamPoint3.erase(item);
+  if(item == collector_gtsamPoint3.end()) {
+    return;
   }
+  collector_gtsamPoint3.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void gtsamPoint3_norm_21(int nargout, mxArray *out[], int nargin, const mxArray *in[])

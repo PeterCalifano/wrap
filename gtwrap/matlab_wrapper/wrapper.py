@@ -30,6 +30,9 @@ class MatlabWrapper(CheckMixin, FormatMixin):
         ignore_classes: A list of classes to ignore (default [])
     """
 
+    _upcast_from_void_template = \
+        WrapperTemplate.collector_function_upcast_from_void
+
     def __init__(self,
                  module_name,
                  top_module_namespace='',
@@ -1464,12 +1467,90 @@ class MatlabWrapper(CheckMixin, FormatMixin):
                                       instantiated_class=instantiated_class)
 
     def wrap_collector_function_upcast_from_void(self, class_name, func_id,
-                                                 cpp_name):
+                                                 cpp_name, collector_name=None):
         """
         Add function to upcast type from void type.
         """
-        return WrapperTemplate.collector_function_upcast_from_void.format(
-            class_name=class_name, cpp_name=cpp_name, id=func_id)
+        if collector_name is None:
+            collector_name = class_name
+        return self._upcast_from_void_template.format(
+            class_name=class_name,
+            collector_name=collector_name,
+            cpp_name=cpp_name,
+            id=func_id)
+
+    def _collector_signature(self, name):
+        """C MEX API signature line for a collector function."""
+        return "void {}" \
+            "(int nargout, mxArray *out[], int nargin, const mxArray *in[])\n".format(
+                name)
+
+    def _collector_insert_make_base_body(self, collector_func, class_name,
+                                         class_name_separated):
+        """Body of a `collectorInsertAndMakeBase` collector (C MEX API)."""
+        body = textwrap.indent(textwrap.dedent('''\
+            mexAtExit(&_deleteAllObjects);
+            typedef std::shared_ptr<{class_name_sep}> Shared;\n
+            Shared *self = *reinterpret_cast<Shared**> (mxGetData(in[0]));
+            collector_{class_name}.insert(self);
+        ''').format(class_name_sep=class_name_separated, class_name=class_name),
+            prefix='  ')
+
+        if collector_func[1].parent_class:
+            body += textwrap.indent(textwrap.dedent('''
+                typedef std::shared_ptr<{}> SharedBase;
+                out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
+                *reinterpret_cast<SharedBase**>(mxGetData(out[0])) = new SharedBase(*self);
+                mexLock();
+            ''').format(collector_func[1].parent_class), prefix='  ')
+
+        return body
+
+    def _collector_constructor_body(self, collector_func, extra, class_name,
+                                    class_name_separated):
+        """Body of a `constructor` collector (C MEX API)."""
+        base = ''
+        params, body_args = self._wrapper_unwrap_arguments(
+            extra.args, instantiated_class=collector_func[1])
+
+        if collector_func[1].parent_class:
+            base += textwrap.indent(textwrap.dedent('''
+                typedef std::shared_ptr<{}> SharedBase;
+                out[1] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
+                *reinterpret_cast<SharedBase**>(mxGetData(out[1])) = new SharedBase(*self);
+                mexLock();
+            ''').format(collector_func[1].parent_class), prefix='  ')
+
+        return textwrap.dedent('''\
+              mexAtExit(&_deleteAllObjects);
+              typedef std::shared_ptr<{class_name_sep}> Shared;\n
+            {body_args}  Shared *self = new Shared(new {class_name_sep}({params}));
+              collector_{class_name}.insert(self);
+              mexLock();
+              out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
+              *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
+            {base}''').format(class_name_sep=class_name_separated,
+                              body_args=body_args,
+                              params=params,
+                              class_name=class_name,
+                              base=base)
+
+    def _collector_deconstructor_body(self, class_name, class_name_separated):
+        """Body of a `deconstructor` collector (C MEX API)."""
+        return textwrap.indent(textwrap.dedent('''\
+            typedef std::shared_ptr<{class_name_sep}> Shared;
+            checkArguments("delete_{class_name}",nargout,nargin,1);
+            Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
+            Collector_{class_name}::iterator item;
+            item = collector_{class_name}.find(self);
+            if(item == collector_{class_name}.end()) {{
+              return;
+            }}
+            collector_{class_name}.erase(item);
+            delete self;
+            mexUnlock();
+        ''').format(class_name_sep=class_name_separated, class_name=class_name),
+            prefix='  ')
 
     def generate_collector_function(self, func_id):
         """
@@ -1485,8 +1566,7 @@ class MatlabWrapper(CheckMixin, FormatMixin):
 
         method_name = collector_func[3]
 
-        collector_function = "void {}" \
-            "(int nargout, mxArray *out[], int nargin, const mxArray *in[])\n".format(method_name)
+        collector_function = self._collector_signature(method_name)
 
         if isinstance(collector_func[1], instantiator.InstantiatedClass):
             body = '{\n'
@@ -1500,63 +1580,16 @@ class MatlabWrapper(CheckMixin, FormatMixin):
             is_property = isinstance(extra, parser.Variable)
 
             if collector_func[2] == 'collectorInsertAndMakeBase':
-                body += textwrap.indent(textwrap.dedent('''\
-                    mexAtExit(&_deleteAllObjects);
-                    typedef std::shared_ptr<{class_name_sep}> Shared;\n
-                    Shared *self = *reinterpret_cast<Shared**> (mxGetData(in[0]));
-                    collector_{class_name}.insert(self);
-                ''').format(class_name_sep=class_name_separated,
-                            class_name=class_name),
-                    prefix='  ')
-
-                if collector_func[1].parent_class:
-                    body += textwrap.indent(textwrap.dedent('''
-                        typedef std::shared_ptr<{}> SharedBase;
-                        out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
-                        *reinterpret_cast<SharedBase**>(mxGetData(out[0])) = new SharedBase(*self);
-                    ''').format(collector_func[1].parent_class),
-                        prefix='  ')
+                body += self._collector_insert_make_base_body(
+                    collector_func, class_name, class_name_separated)
 
             elif collector_func[2] == 'constructor':
-                base = ''
-                params, body_args = self._wrapper_unwrap_arguments(
-                    extra.args, instantiated_class=collector_func[1])
-
-                if collector_func[1].parent_class:
-                    base += textwrap.indent(textwrap.dedent('''
-                        typedef std::shared_ptr<{}> SharedBase;
-                        out[1] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
-                        *reinterpret_cast<SharedBase**>(mxGetData(out[1])) = new SharedBase(*self);
-                    ''').format(collector_func[1].parent_class),
-                        prefix='  ')
-
-                body += textwrap.dedent('''\
-                      mexAtExit(&_deleteAllObjects);
-                      typedef std::shared_ptr<{class_name_sep}> Shared;\n
-                    {body_args}  Shared *self = new Shared(new {class_name_sep}({params}));
-                      collector_{class_name}.insert(self);
-                      out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
-                      *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
-                    {base}''').format(class_name_sep=class_name_separated,
-                                      body_args=body_args,
-                                      params=params,
-                                      class_name=class_name,
-                                      base=base)
+                body += self._collector_constructor_body(
+                    collector_func, extra, class_name, class_name_separated)
 
             elif collector_func[2] == 'deconstructor':
-                body += textwrap.indent(textwrap.dedent('''\
-                    typedef std::shared_ptr<{class_name_sep}> Shared;
-                    checkArguments("delete_{class_name}",nargout,nargin,1);
-                    Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
-                    Collector_{class_name}::iterator item;
-                    item = collector_{class_name}.find(self);
-                    if(item != collector_{class_name}.end()) {{
-                      collector_{class_name}.erase(item);
-                    }}
-                    delete self;
-                ''').format(class_name_sep=class_name_separated,
-                            class_name=class_name),
-                    prefix='  ')
+                body += self._collector_deconstructor_body(
+                    class_name, class_name_separated)
 
             elif extra == 'serialize':
                 if self.use_boost_serialization:
@@ -1850,7 +1883,10 @@ class MatlabWrapper(CheckMixin, FormatMixin):
 
             if queue_set_next_case:
                 ptr_ctor_frag += self.wrap_collector_function_upcast_from_void(
-                    id_val[1].name, idx, id_val[1].to_cpp())
+                    id_val[1].name,
+                    idx,
+                    id_val[1].to_cpp(),
+                    collector_name=id_val[0] + id_val[1].name)
 
         wrapper_file = textwrap.dedent('''\
             {includes}

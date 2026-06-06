@@ -80,6 +80,8 @@ class WrapperTemplate:
               std::shared_ptr<void> *asVoid = *reinterpret_cast<std::shared_ptr<void>**> (mxGetData(in[0]));
               out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
               Shared *self = new Shared(std::static_pointer_cast<{cpp_name}>(*asVoid));
+              collector_{collector_name}.insert(self);
+              mexLock();
               *reinterpret_cast<Shared**>(mxGetData(out[0])) = self;
             }}\n
         ''')
