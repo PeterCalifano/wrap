@@ -40,6 +40,7 @@ function run_benchmark(toolboxDir, api, nIters, sizes)
     c.echoVector(ones(s, 1));
     c.echoMatrix(ones(s, s));
     c.traceMatrix(ones(s, s));
+    c.traceMatrixView(ones(s, s));
     c.ramp(s, s);
   end
   ctor_dtor(); try_throw(c);
@@ -60,6 +61,7 @@ function run_benchmark(toolboxDir, api, nIters, sizes)
     emit('vector_echo',   api, reps, s, bench(@() c.echoVector(v), reps, nBlocks));
     emit('matrix_echo',   api, reps, s, bench(@() c.echoMatrix(M), reps, nBlocks));
     emit('matrix_unwrap', api, reps, s, bench(@() c.traceMatrix(M), reps, nBlocks));
+    emit('matrix_view_unwrap', api, reps, s, bench(@() c.traceMatrixView(M), reps, nBlocks));
     emit('matrix_wrap',   api, reps, s, bench(@() c.ramp(s, s), reps, nBlocks));
     if s == sizes(end)
       emit_rss('matrix', api, pid);

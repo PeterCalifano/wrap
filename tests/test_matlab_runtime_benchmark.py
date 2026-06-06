@@ -50,6 +50,7 @@ class TestMatlabRuntimeBenchmark(unittest.TestCase):
                     ops = {r[0] for r in rows}
                     # A timing row, a vmrss snapshot and a vmhwm snapshot.
                     self.assertIn("matrix_echo", ops)
+                    self.assertIn("matrix_view_unwrap", ops)
                     self.assertTrue(any(o.startswith("vmrss_") for o in ops),
                                     "no vmrss memory rows for api={}".format(api))
                     self.assertTrue(any(o.startswith("vmhwm_") for o in ops),

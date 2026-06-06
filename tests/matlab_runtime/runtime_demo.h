@@ -14,6 +14,7 @@
 
 namespace demo
 {
+    using ConstMatrixView = Eigen::Ref<const gtsam::Matrix>;
 
     enum Color
     {
@@ -58,6 +59,7 @@ namespace demo
         }
         double sumVector(const gtsam::Vector &v) const { return v.sum(); }
         double traceMatrix(const gtsam::Matrix &m) const { return m.trace(); }
+        double traceMatrixView(ConstMatrixView m) const { return m.trace(); }
         double elem(const gtsam::Matrix &m, int i, int j) const { return m(i, j); }
 
         // Trivial echoes used by the C-vs-C++ MEX benchmark (run_benchmark.m). The

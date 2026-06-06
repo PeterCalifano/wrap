@@ -2,7 +2,6 @@
 
 namespace demo
 {
-
     enum Color
     {
         Red,
@@ -27,6 +26,7 @@ namespace demo
         Matrix ramp(size_t rows, size_t cols) const;
         double sumVector(Vector v) const;
         double traceMatrix(Matrix m) const;
+        double traceMatrixView(demo::ConstMatrixView m) const;
         double elem(Matrix m, int i, int j) const;
 
         Vector echoVector(Vector v) const;

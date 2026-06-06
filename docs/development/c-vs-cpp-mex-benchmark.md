@@ -19,7 +19,8 @@ here is attributable to the MEX runtime: `matlab.h` (legacy C, `mxArray*`) vs
 Fixture: `tests/matlab_runtime/runtime_demo.h` / `.i` (the same `demo::Counter`
 used by the runtime conformance gate), extended with a few trivial echo methods
 whose bodies are near-empty so timing isolates wrap/unwrap marshalling rather
-than computation: `echoVector`, `echoMatrix`, `noop`, `echoInt`, `echoBool`.
+than computation: `echoVector`, `echoMatrix`, `traceMatrixView`, `noop`,
+`echoInt`, `echoBool`.
 
 Driver: `tests/matlab_runtime/run_benchmark.m`. For each operation it runs a
 block-median timing scheme (median over 15 tight loops; reported as microseconds
@@ -33,6 +34,7 @@ Operations:
 | `vector_echo` | `gtsam::Vector` arg unwrap + return wrap | vector marshalling |
 | `matrix_echo` | `gtsam::Matrix` unwrap + wrap (headline) | nested-loop vs bulk `std::copy` |
 | `matrix_unwrap` | `traceMatrix` (arg unwrap, scalar return) | unwrap path only |
+| `matrix_view_unwrap` | `traceMatrixView` (`ConstMatrixView` arg, scalar return) | zero-copy matrix-view unwrap path |
 | `matrix_wrap` | `ramp(n,n)` (return wrap; includes an O(n*n) fill) | wrap path only |
 | `construct_destroy` | `Counter(5)` + `delete` | object lifetime (mexLock vs RAII) |
 | `error_path` | `mayThrow(true)` try/catch | `feval("error")` vs native `MATLABException` |
@@ -63,7 +65,7 @@ pytest tests/test_matlab_runtime_benchmark.py
 # Full benchmark with real numbers + comparison tables (CSV + markdown).
 python tests/matlab_runtime/run_benchmark.py \
     --iters 2000 --sizes 8,64,256,1024 --time-v \
-    --out-dir /tmp/gtwrap-c-vs-cpp-mex-after-fixes
+    --out-dir /tmp/gtwrap-const-matrix-view-benchmark
 ```
 
 The runner builds and runs both backends, scrapes the `BENCH,...` lines, records
@@ -78,10 +80,10 @@ Host: Intel Core i7-14700K, MATLAB R2023b Update 10, libgtsam 4.3a1, 2000
 iterations, sizes 8/64/256/1024. Single machine, single run; treat small deltas
 as noise.
 
-Raw artifacts from the post-fix run:
+Raw artifacts from the matrix-view benchmark run:
 
-- `/tmp/gtwrap-c-vs-cpp-mex-after-fixes/results.csv`
-- `/tmp/gtwrap-c-vs-cpp-mex-after-fixes/results.md`
+- `/tmp/gtwrap-const-matrix-view-benchmark/results.csv`
+- `/tmp/gtwrap-const-matrix-view-benchmark/results.md`
 
 ### Timing (median microseconds per call)
 
@@ -89,81 +91,92 @@ Ratio is C / C++: a value below 1.00 means the C backend is faster.
 
 | op | size | c (us) | cpp (us) | c/cpp |
 | --- | ---: | ---: | ---: | ---: |
-| construct_destroy | 0 | 6.9020 | 13.3380 | 0.52x |
-| error_path | 0 | 83.1540 | 134.9580 | 0.62x |
-| matrix_echo | 8 | 3.0235 | 26.5280 | 0.11x |
-| matrix_echo | 64 | 5.9480 | 27.2600 | 0.22x |
-| matrix_echo | 256 | 51.9206 | 73.3651 | 0.71x |
-| matrix_echo | 1024 | 2611.4500 | 5278.8000 | 0.49x |
-| matrix_unwrap | 8 | 2.9750 | 25.9790 | 0.11x |
-| matrix_unwrap | 64 | 4.2800 | 25.9000 | 0.17x |
-| matrix_unwrap | 256 | 18.1746 | 39.7937 | 0.46x |
-| matrix_unwrap | 1024 | 364.4500 | 799.1500 | 0.46x |
-| matrix_wrap | 8 | 3.4090 | 28.5080 | 0.12x |
-| matrix_wrap | 64 | 6.6560 | 33.0400 | 0.20x |
-| matrix_wrap | 256 | 147.0317 | 166.3492 | 0.88x |
-| matrix_wrap | 1024 | 4584.8000 | 4466.5500 | 1.03x |
-| noop | 0 | 1.9610 | 22.1695 | 0.09x |
-| scalar_bool | 0 | 3.0845 | 25.2110 | 0.12x |
-| scalar_int | 0 | 8.3320 | 26.0120 | 0.32x |
-| vector_echo | 8 | 3.0015 | 25.5170 | 0.12x |
-| vector_echo | 64 | 3.2400 | 28.8280 | 0.11x |
-| vector_echo | 256 | 3.5079 | 30.4286 | 0.12x |
-| vector_echo | 1024 | 3.6500 | 23.2000 | 0.16x |
+| construct_destroy | 0 | 11.3920 | 19.9800 | 0.57x |
+| error_path | 0 | 132.1960 | 188.2900 | 0.70x |
+| matrix_echo | 8 | 4.9425 | 38.0355 | 0.13x |
+| matrix_echo | 64 | 9.7720 | 27.6720 | 0.35x |
+| matrix_echo | 256 | 70.5238 | 76.8413 | 0.92x |
+| matrix_echo | 1024 | 2979.5000 | 2697.4000 | 1.10x |
+| matrix_unwrap | 8 | 5.1465 | 38.9050 | 0.13x |
+| matrix_unwrap | 64 | 7.1280 | 26.9680 | 0.26x |
+| matrix_unwrap | 256 | 31.8889 | 41.5714 | 0.77x |
+| matrix_unwrap | 1024 | 430.2500 | 376.9500 | 1.14x |
+| matrix_view_unwrap | 8 | 5.0430 | 36.0585 | 0.14x |
+| matrix_view_unwrap | 64 | 6.8440 | 29.2880 | 0.23x |
+| matrix_view_unwrap | 256 | 25.4127 | 39.7460 | 0.64x |
+| matrix_view_unwrap | 1024 | 385.1000 | 381.7500 | 1.01x |
+| matrix_wrap | 8 | 5.2975 | 40.1055 | 0.13x |
+| matrix_wrap | 64 | 10.5960 | 29.3760 | 0.36x |
+| matrix_wrap | 256 | 175.2857 | 173.0794 | 1.01x |
+| matrix_wrap | 1024 | 4495.3500 | 3971.3000 | 1.13x |
+| noop | 0 | 3.3865 | 31.8135 | 0.11x |
+| scalar_bool | 0 | 5.0075 | 36.9005 | 0.14x |
+| scalar_int | 0 | 5.1795 | 38.2315 | 0.14x |
+| vector_echo | 8 | 4.9180 | 35.8610 | 0.14x |
+| vector_echo | 64 | 3.3080 | 26.2240 | 0.13x |
+| vector_echo | 256 | 5.4444 | 25.6825 | 0.21x |
+| vector_echo | 1024 | 6.0000 | 23.3000 | 0.26x |
 
 ### Memory (kB)
 
 | metric | c | cpp |
 | --- | ---: | ---: |
-| vmhwm_baseline | 1486852 | 1476548 |
-| vmhwm_end | 1522540 | 2819244 |
-| vmhwm_lifecycle | 1522540 | 2819244 |
-| vmhwm_matrix | 1522540 | 2819244 |
-| vmrss_baseline | 1471832 | 1461980 |
-| vmrss_end | 1490000 | 2810892 |
-| vmrss_lifecycle | 1490000 | 2811176 |
-| vmrss_matrix | 1490000 | 2810952 |
+| vmhwm_baseline | 1468944 | 1469984 |
+| vmhwm_end | 1511116 | 3047648 |
+| vmhwm_lifecycle | 1511116 | 3047648 |
+| vmhwm_matrix | 1511116 | 3047648 |
+| vmrss_baseline | 1455760 | 1457280 |
+| vmrss_end | 1478604 | 3032012 |
+| vmrss_lifecycle | 1478604 | 3032324 |
+| vmrss_matrix | 1478604 | 3032100 |
 
 ### Static footprint
 
 | api | mex bytes | linked libs | whole-proc peak (kB) |
 | --- | ---: | --- | ---: |
-| c | 101232 | libmex, libmx | 1522540 |
-| cpp | 627976 | libMatlabDataArray, libmex | 2819244 |
+| c | 101600 | libmex, libmx | 1511116 |
+| cpp | 632480 | libMatlabDataArray, libmex | 3047648 |
 
 ## Interpretation
 
 1. The C++ backend still carries a large fixed method-call overhead. The
-   post-fix `noop` path is 22.17 us for C++ vs 1.96 us for C. This is better
-   than the earlier 31.75 us C++ `noop` measurement after removing the copied
-   input vector and per-call RTTI workspace check, but it is still dominated by
-   the C++ MEX API's `matlab::engine::MATLABEngine` / Data Array machinery and
-   by handle decode through `engine->getProperty`.
+   matrix-view benchmark `noop` path is 31.81 us for C++ vs 3.39 us for C. That
+   fixed cost is still dominated by the C++ MEX API's
+   `matlab::engine::MATLABEngine` / Data Array machinery and by handle decode
+   through `engine->getProperty`.
 
 2. The zero-copy `WrapIn` view removes avoidable wrapper-side input copying, but
    it does not make the C++ backend faster than C on small or medium calls. That
    is expected and is not a release criterion for the C++ backend.
 
-3. Large matrix return wrapping is the only case that reaches parity in this
-   run: `matrix_wrap` at 1024 is effectively tied, with C++ 1.03x faster. Full
-   matrix echo and matrix unwrap remain C-favoured in this run, so dense-matrix
-   throughput should be treated as workload-dependent rather than a blanket C++
-   advantage.
+3. `ConstMatrixView` is now benchmarked directly as `matrix_view_unwrap`.
+   Against the copy-unwrapping `matrix_unwrap` path, the C backend improves from
+   31.89 us to 25.41 us at size 256 and from 430.25 us to 385.10 us at size
+   1024. The C++ backend is mixed in this run: 41.57 us to 39.75 us at size 256,
+   but 376.95 us to 381.75 us at size 1024, effectively parity within run noise.
+   The feature is therefore a clear C-runtime copy avoidance and a correctness/
+   API-extension path for C++, not a guaranteed C++ speed win.
 
-4. `vector_echo` never crosses over in this range: vectors up to 1024 elements
-   are too small for bulk copy to overcome the C++ method-call overhead.
+4. Large matrix return wrapping still crosses over in this run: `matrix_wrap`
+   at 1024 is 1.13x faster on the C++ backend. Full matrix echo and matrix
+   unwrap remain workload-dependent, so dense-matrix throughput should not be
+   treated as a blanket C++ advantage.
 
-5. The error path is expensive on both backends (exception unwinding through the
-   MEX boundary), and is ~1.6x more expensive on the C++ path despite throwing a
+5. `vector_echo` never crosses over in this range. Even at 1024 elements, the
+   vector payload is too small for bulk copy to overcome the C++ method-call
+   overhead.
+
+6. The error path is expensive on both backends (exception unwinding through the
+   MEX boundary), and is ~1.4x more expensive on the C++ path despite throwing a
    native `MATLABException` rather than the C path's `feval("error", ...)` string
    round-trip. The native exception buys identifier fidelity (the `wrap:error`
    identifier survives the round trip, asserted in `run_test.m`), not speed.
 
-6. Memory is the C++ backend's clearest cost. Peak RSS at end is ~1.52 GB (C) vs
-   ~2.82 GB (C++), about 1.3 GB more, driven by the MATLAB Data Array / in-process
+7. Memory is the C++ backend's clearest cost. Peak RSS at end is ~1.51 GB (C) vs
+   ~3.05 GB (C++), about 1.5 GB more, driven by the MATLAB Data Array / in-process
    engine machinery the C++ runtime pulls in (`libMatlabDataArray`). Baselines are
-   nearly equal (~1.47 GB), so the gap is incurred by *using* the C++ runtime, not
-   merely loading it. The compiled artifact is also ~6x larger (628 KB vs 101 KB).
+   nearly equal (~1.46 GB), so the gap is incurred by *using* the C++ runtime, not
+   merely loading it. The compiled artifact is also ~6x larger (632 KB vs 102 KB).
    The documented `bool`-as-`logical` (1 byte) vs `bool`-as-`uint32` (8 bytes)
    difference favours C++ but is negligible at this scale and invisible against
    the engine footprint.
