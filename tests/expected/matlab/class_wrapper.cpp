@@ -1,4 +1,4 @@
-#include <gtwrap/matlab.h>
+#include <wrap/matlab.h>
 #include <map>
 
 #include <folder/path/to/Test.h>

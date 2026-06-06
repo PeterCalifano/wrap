@@ -223,7 +223,7 @@ void MyTemplatePoint2_create_MixedPtrs_9(int nargout, mxArray *out[], int nargin
   out[0] = wrap< Point2 >(pairResult.first);
   {
   std::shared_ptr<Point2> shared(pairResult.second);
-  out[1] = wrap_shared_ptr(shared,"Point2");
+  out[1] = wrap_shared_ptr(shared,"Point2", false);
   }
 }
 
@@ -234,11 +234,11 @@ void MyTemplatePoint2_create_ptrs_10(int nargout, mxArray *out[], int nargin, co
   auto pairResult = obj->create_ptrs();
   {
   std::shared_ptr<Point2> shared(pairResult.first);
-  out[0] = wrap_shared_ptr(shared,"Point2");
+  out[0] = wrap_shared_ptr(shared,"Point2", false);
   }
   {
   std::shared_ptr<Point2> shared(pairResult.second);
-  out[1] = wrap_shared_ptr(shared,"Point2");
+  out[1] = wrap_shared_ptr(shared,"Point2", false);
   }
 }
 
@@ -257,7 +257,7 @@ void MyTemplatePoint2_return_Tptr_12(int nargout, mxArray *out[], int nargin, co
   Point2 value = unwrap< Point2 >(in[1]);
   {
   std::shared_ptr<Point2> shared(obj->return_Tptr(value));
-  out[0] = wrap_shared_ptr(shared,"Point2");
+  out[0] = wrap_shared_ptr(shared,"Point2", false);
   }
 }
 
@@ -270,11 +270,11 @@ void MyTemplatePoint2_return_ptrs_13(int nargout, mxArray *out[], int nargin, co
   auto pairResult = obj->return_ptrs(p1,p2);
   {
   std::shared_ptr<Point2> shared(pairResult.first);
-  out[0] = wrap_shared_ptr(shared,"Point2");
+  out[0] = wrap_shared_ptr(shared,"Point2", false);
   }
   {
   std::shared_ptr<Point2> shared(pairResult.second);
-  out[1] = wrap_shared_ptr(shared,"Point2");
+  out[1] = wrap_shared_ptr(shared,"Point2", false);
   }
 }
 
@@ -398,7 +398,7 @@ void MyTemplateMatrix_create_MixedPtrs_25(int nargout, mxArray *out[], int nargi
   out[0] = wrap< Matrix >(pairResult.first);
   {
   std::shared_ptr<Matrix> shared(pairResult.second);
-  out[1] = wrap_shared_ptr(shared,"Matrix");
+  out[1] = wrap_shared_ptr(shared,"Matrix", false);
   }
 }
 
@@ -409,11 +409,11 @@ void MyTemplateMatrix_create_ptrs_26(int nargout, mxArray *out[], int nargin, co
   auto pairResult = obj->create_ptrs();
   {
   std::shared_ptr<Matrix> shared(pairResult.first);
-  out[0] = wrap_shared_ptr(shared,"Matrix");
+  out[0] = wrap_shared_ptr(shared,"Matrix", false);
   }
   {
   std::shared_ptr<Matrix> shared(pairResult.second);
-  out[1] = wrap_shared_ptr(shared,"Matrix");
+  out[1] = wrap_shared_ptr(shared,"Matrix", false);
   }
 }
 
@@ -432,7 +432,7 @@ void MyTemplateMatrix_return_Tptr_28(int nargout, mxArray *out[], int nargin, co
   Matrix value = unwrap< Matrix >(in[1]);
   {
   std::shared_ptr<Matrix> shared(obj->return_Tptr(value));
-  out[0] = wrap_shared_ptr(shared,"Matrix");
+  out[0] = wrap_shared_ptr(shared,"Matrix", false);
   }
 }
 
@@ -445,11 +445,11 @@ void MyTemplateMatrix_return_ptrs_29(int nargout, mxArray *out[], int nargin, co
   auto pairResult = obj->return_ptrs(p1,p2);
   {
   std::shared_ptr<Matrix> shared(pairResult.first);
-  out[0] = wrap_shared_ptr(shared,"Matrix");
+  out[0] = wrap_shared_ptr(shared,"Matrix", false);
   }
   {
   std::shared_ptr<Matrix> shared(pairResult.second);
-  out[1] = wrap_shared_ptr(shared,"Matrix");
+  out[1] = wrap_shared_ptr(shared,"Matrix", false);
   }
 }
 

@@ -110,6 +110,7 @@ class TestMatlabRuntimeBuild(unittest.TestCase):
             target_include_directories(runtime_demo INTERFACE
               "{RUNTIME_DIR}"
               "{WRAP_INCLUDE_PARENT}"
+              "{REPO_ROOT}"
               "{GTSAM_INCLUDE}"
               "{EIGEN_INCLUDE}")
             target_link_directories(runtime_demo INTERFACE "{GTSAM_LIB}")
@@ -120,7 +121,7 @@ class TestMatlabRuntimeBuild(unittest.TestCase):
               "{osp.join(RUNTIME_DIR, 'runtime_demo.i')}"
               runtime_demo
               ""
-              "{RUNTIME_DIR};{WRAP_INCLUDE_PARENT};{GTSAM_INCLUDE};{EIGEN_INCLUDE}"
+              "{RUNTIME_DIR};{REPO_ROOT};{WRAP_INCLUDE_PARENT};{GTSAM_INCLUDE};{EIGEN_INCLUDE}"
               ""
               ""
               OFF)

@@ -30,6 +30,9 @@ WRAP_INCLUDE_PARENT = osp.dirname(REPO_ROOT)        # so `<wrap/matlab*.h>` reso
 RUNTIME_DIR = HARNESS_DIR
 WRAP_SCRIPT = osp.join(REPO_ROOT, "scripts", "matlab_wrap.py")
 
+# Source-tree locations for local wrapper headers and demos.
+GTWRAP_ROOT_INCLUDE = REPO_ROOT
+
 # Locations of the C++ dependencies the demo links against (overridable).
 GTSAM_INCLUDE = os.environ.get("GTSAM_INCLUDE_DIR", "/usr/local/include")
 GTSAM_LIB = os.environ.get("GTSAM_LIB_DIR", "/usr/local/lib")
@@ -105,6 +108,7 @@ def compile_wrapper(out_dir, api, module_name="runtime_demo"):
     proc = subprocess.run(
         [osp.join(MATLAB_BINDIR, "mex"), "-silent",
          "CXXFLAGS=" + cxxflags,
+         "-I" + GTWRAP_ROOT_INCLUDE,
          "-I" + WRAP_INCLUDE_PARENT,
          "-I" + RUNTIME_DIR,
          "-I" + GTSAM_INCLUDE,

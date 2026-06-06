@@ -404,7 +404,7 @@ void Test_return_Point2Ptr_25(Context& ctx, int nargout, OutputList& out, int na
   bool value = unwrap< bool >(in[1]);
   {
   std::shared_ptr<Point2> shared(obj->return_Point2Ptr(value));
-  out[0] = wrap_shared_ptr(ctx, shared,"Point2");
+  out[0] = wrap_shared_ptr(ctx, shared,"Point2", false);
   }
 }
 
