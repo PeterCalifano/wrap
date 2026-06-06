@@ -186,6 +186,7 @@ void FunRange_constructor_1(int nargout, mxArray *out[], int nargin, const mxArr
 
   Shared *self = new Shared(new FunRange());
   collector_FunRange.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -197,10 +198,12 @@ void FunRange_deconstructor_2(int nargout, mxArray *out[], int nargin, const mxA
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_FunRange::iterator item;
   item = collector_FunRange.find(self);
-  if(item != collector_FunRange.end()) {
-    collector_FunRange.erase(item);
+  if(item == collector_FunRange.end()) {
+    return;
   }
+  collector_FunRange.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void FunRange_range_3(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -233,10 +236,12 @@ void FunDouble_deconstructor_6(int nargout, mxArray *out[], int nargin, const mx
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_FunDouble::iterator item;
   item = collector_FunDouble.find(self);
-  if(item != collector_FunDouble.end()) {
-    collector_FunDouble.erase(item);
+  if(item == collector_FunDouble.end()) {
+    return;
   }
+  collector_FunDouble.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void FunDouble_multiTemplatedMethod_7(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -294,6 +299,7 @@ void Test_constructor_13(int nargout, mxArray *out[], int nargin, const mxArray 
 
   Shared *self = new Shared(new Test());
   collector_Test.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -307,6 +313,7 @@ void Test_constructor_14(int nargout, mxArray *out[], int nargin, const mxArray 
   Matrix b = unwrap< Matrix >(in[1]);
   Shared *self = new Shared(new Test(a,b));
   collector_Test.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -318,10 +325,12 @@ void Test_deconstructor_15(int nargout, mxArray *out[], int nargin, const mxArra
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_Test::iterator item;
   item = collector_Test.find(self);
-  if(item != collector_Test.end()) {
-    collector_Test.erase(item);
+  if(item == collector_Test.end()) {
+    return;
   }
+  collector_Test.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void Test_arg_EigenConstRef_16(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -634,6 +643,7 @@ void PrimitiveRefDouble_constructor_53(int nargout, mxArray *out[], int nargin, 
 
   Shared *self = new Shared(new PrimitiveRef<double>());
   collector_PrimitiveRefDouble.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -645,10 +655,12 @@ void PrimitiveRefDouble_deconstructor_54(int nargout, mxArray *out[], int nargin
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_PrimitiveRefDouble::iterator item;
   item = collector_PrimitiveRefDouble.find(self);
-  if(item != collector_PrimitiveRefDouble.end()) {
-    collector_PrimitiveRefDouble.erase(item);
+  if(item == collector_PrimitiveRefDouble.end()) {
+    return;
   }
+  collector_PrimitiveRefDouble.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void PrimitiveRefDouble_Brutal_55(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -674,6 +686,7 @@ void MyVector3_constructor_57(int nargout, mxArray *out[], int nargin, const mxA
 
   Shared *self = new Shared(new MyVector<3>());
   collector_MyVector3.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -685,10 +698,12 @@ void MyVector3_deconstructor_58(int nargout, mxArray *out[], int nargin, const m
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_MyVector3::iterator item;
   item = collector_MyVector3.find(self);
-  if(item != collector_MyVector3.end()) {
-    collector_MyVector3.erase(item);
+  if(item == collector_MyVector3.end()) {
+    return;
   }
+  collector_MyVector3.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void MyVector12_collectorInsertAndMakeBase_59(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -707,6 +722,7 @@ void MyVector12_constructor_60(int nargout, mxArray *out[], int nargin, const mx
 
   Shared *self = new Shared(new MyVector<12>());
   collector_MyVector12.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -718,10 +734,12 @@ void MyVector12_deconstructor_61(int nargout, mxArray *out[], int nargin, const 
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_MyVector12::iterator item;
   item = collector_MyVector12.find(self);
-  if(item != collector_MyVector12.end()) {
-    collector_MyVector12.erase(item);
+  if(item == collector_MyVector12.end()) {
+    return;
   }
+  collector_MyVector12.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void MultipleTemplatesIntDouble_collectorInsertAndMakeBase_62(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -740,10 +758,12 @@ void MultipleTemplatesIntDouble_deconstructor_63(int nargout, mxArray *out[], in
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_MultipleTemplatesIntDouble::iterator item;
   item = collector_MultipleTemplatesIntDouble.find(self);
-  if(item != collector_MultipleTemplatesIntDouble.end()) {
-    collector_MultipleTemplatesIntDouble.erase(item);
+  if(item == collector_MultipleTemplatesIntDouble.end()) {
+    return;
   }
+  collector_MultipleTemplatesIntDouble.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void MultipleTemplatesIntFloat_collectorInsertAndMakeBase_64(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -762,10 +782,12 @@ void MultipleTemplatesIntFloat_deconstructor_65(int nargout, mxArray *out[], int
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_MultipleTemplatesIntFloat::iterator item;
   item = collector_MultipleTemplatesIntFloat.find(self);
-  if(item != collector_MultipleTemplatesIntFloat.end()) {
-    collector_MultipleTemplatesIntFloat.erase(item);
+  if(item == collector_MultipleTemplatesIntFloat.end()) {
+    return;
   }
+  collector_MultipleTemplatesIntFloat.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void ForwardKinematics_collectorInsertAndMakeBase_66(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -789,6 +811,7 @@ void ForwardKinematics_constructor_67(int nargout, mxArray *out[], int nargin, c
   gtsam::Pose3& l2Tp = *unwrap_shared_ptr< gtsam::Pose3 >(in[4], "ptr_gtsamPose3");
   Shared *self = new Shared(new ForwardKinematics(robot,start_link_name,end_link_name,joint_angles,l2Tp));
   collector_ForwardKinematics.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -804,6 +827,7 @@ void ForwardKinematics_constructor_68(int nargout, mxArray *out[], int nargin, c
   gtsam::Values& joint_angles = *unwrap_shared_ptr< gtsam::Values >(in[3], "ptr_gtsamValues");
   Shared *self = new Shared(new ForwardKinematics(robot,start_link_name,end_link_name,joint_angles,gtsam::Pose3()));
   collector_ForwardKinematics.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -815,10 +839,12 @@ void ForwardKinematics_deconstructor_69(int nargout, mxArray *out[], int nargin,
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_ForwardKinematics::iterator item;
   item = collector_ForwardKinematics.find(self);
-  if(item != collector_ForwardKinematics.end()) {
-    collector_ForwardKinematics.erase(item);
+  if(item == collector_ForwardKinematics.end()) {
+    return;
   }
+  collector_ForwardKinematics.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void TemplatedConstructor_collectorInsertAndMakeBase_70(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -837,6 +863,7 @@ void TemplatedConstructor_constructor_71(int nargout, mxArray *out[], int nargin
 
   Shared *self = new Shared(new TemplatedConstructor());
   collector_TemplatedConstructor.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -849,6 +876,7 @@ void TemplatedConstructor_constructor_72(int nargout, mxArray *out[], int nargin
   string arg = unwrap< string >(in[0]);
   Shared *self = new Shared(new TemplatedConstructor(arg));
   collector_TemplatedConstructor.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -861,6 +889,7 @@ void TemplatedConstructor_constructor_73(int nargout, mxArray *out[], int nargin
   int arg = unwrap< int >(in[0]);
   Shared *self = new Shared(new TemplatedConstructor(arg));
   collector_TemplatedConstructor.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -873,6 +902,7 @@ void TemplatedConstructor_constructor_74(int nargout, mxArray *out[], int nargin
   double arg = unwrap< double >(in[0]);
   Shared *self = new Shared(new TemplatedConstructor(arg));
   collector_TemplatedConstructor.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -884,10 +914,12 @@ void TemplatedConstructor_deconstructor_75(int nargout, mxArray *out[], int narg
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_TemplatedConstructor::iterator item;
   item = collector_TemplatedConstructor.find(self);
-  if(item != collector_TemplatedConstructor.end()) {
-    collector_TemplatedConstructor.erase(item);
+  if(item == collector_TemplatedConstructor.end()) {
+    return;
   }
+  collector_TemplatedConstructor.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void FastSet_collectorInsertAndMakeBase_76(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -906,6 +938,7 @@ void FastSet_constructor_77(int nargout, mxArray *out[], int nargin, const mxArr
 
   Shared *self = new Shared(new FastSet());
   collector_FastSet.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -917,10 +950,12 @@ void FastSet_deconstructor_78(int nargout, mxArray *out[], int nargin, const mxA
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_FastSet::iterator item;
   item = collector_FastSet.find(self);
-  if(item != collector_FastSet.end()) {
-    collector_FastSet.erase(item);
+  if(item == collector_FastSet.end()) {
+    return;
   }
+  collector_FastSet.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void HessianFactor_collectorInsertAndMakeBase_79(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -934,6 +969,7 @@ void HessianFactor_collectorInsertAndMakeBase_79(int nargout, mxArray *out[], in
   typedef std::shared_ptr<gtsam::GaussianFactor> SharedBase;
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<SharedBase**>(mxGetData(out[0])) = new SharedBase(*self);
+  mexLock();
 }
 
 void HessianFactor_upcastFromVoid_80(int nargout, mxArray *out[], int nargin, const mxArray *in[]) {
@@ -942,6 +978,8 @@ void HessianFactor_upcastFromVoid_80(int nargout, mxArray *out[], int nargin, co
   std::shared_ptr<void> *asVoid = *reinterpret_cast<std::shared_ptr<void>**> (mxGetData(in[0]));
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   Shared *self = new Shared(std::static_pointer_cast<HessianFactor>(*asVoid));
+  collector_HessianFactor.insert(self);
+  mexLock();
   *reinterpret_cast<Shared**>(mxGetData(out[0])) = self;
 }
 
@@ -956,12 +994,14 @@ void HessianFactor_constructor_81(int nargout, mxArray *out[], int nargin, const
   double f = unwrap< double >(in[3]);
   Shared *self = new Shared(new HessianFactor(js,Gs,gs,f));
   collector_HessianFactor.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 
   typedef std::shared_ptr<gtsam::GaussianFactor> SharedBase;
   out[1] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<SharedBase**>(mxGetData(out[1])) = new SharedBase(*self);
+  mexLock();
 }
 
 void HessianFactor_deconstructor_82(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -971,10 +1011,12 @@ void HessianFactor_deconstructor_82(int nargout, mxArray *out[], int nargin, con
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_HessianFactor::iterator item;
   item = collector_HessianFactor.find(self);
-  if(item != collector_HessianFactor.end()) {
-    collector_HessianFactor.erase(item);
+  if(item == collector_HessianFactor.end()) {
+    return;
   }
+  collector_HessianFactor.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void SmartProjectionRigFactorPinholeCameraCal3_S2_collectorInsertAndMakeBase_83(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -988,6 +1030,7 @@ void SmartProjectionRigFactorPinholeCameraCal3_S2_collectorInsertAndMakeBase_83(
   typedef std::shared_ptr<gtsam::SmartProjectionFactor<gtsam::PinholeCamera<gtsam::Cal3_S2>>> SharedBase;
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<SharedBase**>(mxGetData(out[0])) = new SharedBase(*self);
+  mexLock();
 }
 
 void SmartProjectionRigFactorPinholeCameraCal3_S2_deconstructor_84(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -997,10 +1040,12 @@ void SmartProjectionRigFactorPinholeCameraCal3_S2_deconstructor_84(int nargout, 
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_SmartProjectionRigFactorPinholeCameraCal3_S2::iterator item;
   item = collector_SmartProjectionRigFactorPinholeCameraCal3_S2.find(self);
-  if(item != collector_SmartProjectionRigFactorPinholeCameraCal3_S2.end()) {
-    collector_SmartProjectionRigFactorPinholeCameraCal3_S2.erase(item);
+  if(item == collector_SmartProjectionRigFactorPinholeCameraCal3_S2.end()) {
+    return;
   }
+  collector_SmartProjectionRigFactorPinholeCameraCal3_S2.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void SmartProjectionRigFactorPinholeCameraCal3_S2_add_85(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -1042,6 +1087,7 @@ void MyFactorPosePoint2_constructor_88(int nargout, mxArray *out[], int nargin, 
   std::shared_ptr<gtsam::noiseModel::Base> noiseModel = unwrap_shared_ptr< gtsam::noiseModel::Base >(in[3], "ptr_gtsamnoiseModelBase");
   Shared *self = new Shared(new MyFactor<gtsam::Pose2, gtsam::Matrix>(key1,key2,measured,noiseModel));
   collector_MyFactorPosePoint2.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -1053,10 +1099,12 @@ void MyFactorPosePoint2_deconstructor_89(int nargout, mxArray *out[], int nargin
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_MyFactorPosePoint2::iterator item;
   item = collector_MyFactorPosePoint2.find(self);
-  if(item != collector_MyFactorPosePoint2.end()) {
-    collector_MyFactorPosePoint2.erase(item);
+  if(item == collector_MyFactorPosePoint2.end()) {
+    return;
   }
+  collector_MyFactorPosePoint2.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void MyFactorPosePoint2_print_90(int nargout, mxArray *out[], int nargin, const mxArray *in[])

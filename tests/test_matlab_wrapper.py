@@ -5,6 +5,8 @@ Date: March 2019
 """
 # pylint: disable=import-error, wrong-import-position
 
+from gtwrap.matlab_wrapper import MatlabWrapper
+from gtwrap.matlab_wrapper import wrapper as matlab_wrapper_module
 import filecmp
 import os
 import os.path as osp
@@ -14,9 +16,6 @@ import unittest
 from unittest import mock
 
 sys.path.append(osp.dirname(osp.dirname(osp.abspath(__file__))))
-
-from gtwrap.matlab_wrapper import wrapper as matlab_wrapper_module
-from gtwrap.matlab_wrapper import MatlabWrapper
 
 
 class TestWrap(unittest.TestCase):
@@ -385,6 +384,85 @@ class TestWrap(unittest.TestCase):
         self.assertIn("isa(varargin{1},'uint32')", global_m)
         self.assertNotIn("'uint32_t'", class_m)
         self.assertNotIn("'std.uint32_t'", class_m)
+
+    def test_matlab_ownership_handles_stale_and_upcast_handles(self):
+        """Keep generated MATLAB ownership idempotent for stale and virtual handles."""
+        file = osp.join(self.INTERFACE_DIR, 'matlab_ownership.i')
+
+        wrapper = MatlabWrapper(
+            module_name='matlab_ownership',
+            top_module_namespace=[''],
+            ignore_classes=[''],
+        )
+        wrapper.wrap([file], path=self.MATLAB_ACTUAL_DIR)
+
+        with open(osp.join(self.MATLAB_ACTUAL_DIR,
+                           'matlab_ownership_wrapper.cpp'),
+                  encoding="UTF-8") as wrapper_file:
+            wrapper_cpp = wrapper_file.read()
+
+        self.assertIn(
+            "  item = collector_OwnedThing.find(self);\n"
+            "  if(item == collector_OwnedThing.end()) {\n"
+            "    return;\n"
+            "  }\n"
+            "  collector_OwnedThing.erase(item);\n"
+            "  delete self;\n"
+            "  mexUnlock();\n",
+            wrapper_cpp)
+        self.assertIn(
+            "  Shared *self = new Shared(new OwnedThing());\n"
+            "  collector_OwnedThing.insert(self);\n"
+            "  mexLock();\n"
+            "  out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);\n",
+            wrapper_cpp)
+        self.assertIn(
+            "void VirtualDerived_upcastFromVoid_", wrapper_cpp)
+        self.assertIn(
+            "  Shared *self = new Shared(std::static_pointer_cast<VirtualDerived>(*asVoid));\n"
+            "  collector_VirtualDerived.insert(self);\n"
+            "  mexLock();\n"
+            "  *reinterpret_cast<Shared**>(mxGetData(out[0])) = self;\n",
+            wrapper_cpp)
+        self.assertIn(
+            "  Shared *self = new Shared(std::static_pointer_cast<wraptest::NamespacedVirtualDerived>(*asVoid));\n"
+            "  collector_wraptestNamespacedVirtualDerived.insert(self);\n"
+            "  mexLock();\n"
+            "  *reinterpret_cast<Shared**>(mxGetData(out[0])) = self;\n",
+            wrapper_cpp)
+
+    def test_matlab_runtime_proxy_construction_failure_cleans_lock(self):
+        """Returned shared_ptr proxy construction must release ownership on failure."""
+        with open(osp.join(self.TEST_DIR, '..', 'matlab.h'),
+                  encoding="UTF-8") as header_file:
+            header = header_file.read()
+
+        self.assertIn(
+            "mxArray** constructionError = nullptr",
+            header)
+        self.assertIn(
+            "mexCallMATLABWithTrap(1, &result, nargin, input, derivedClassName)",
+            header)
+        self.assertNotIn(
+            "mexCallMATLAB(1,&result, nargin, input, derivedClassName);",
+            header)
+        self.assertIn(
+            "if(constructionError) {\n"
+            "      *constructionError = exception;\n"
+            "    } else {\n"
+            "      gtwrap::ReportMatlabException(\n"
+            "        exception, \"wrap: failed constructing MATLAB proxy object\");\n"
+            "    }\n"
+            "    return nullptr;",
+            header)
+        self.assertIn(
+            "if(exception || !result) {\n"
+            "      delete heapPtr;\n"
+            "      mexUnlock();\n"
+            "      gtwrap::ReportMatlabException(\n"
+            "        exception, \"wrap: failed constructing MATLAB proxy object\");\n"
+            "    }",
+            header)
 
     def test_non_const_string_ref_is_rejected(self):
         """Reject mutable string references instead of generating lossy wrappers."""

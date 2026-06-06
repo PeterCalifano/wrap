@@ -122,6 +122,8 @@ void MyBase_upcastFromVoid_1(int nargout, mxArray *out[], int nargin, const mxAr
   std::shared_ptr<void> *asVoid = *reinterpret_cast<std::shared_ptr<void>**> (mxGetData(in[0]));
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   Shared *self = new Shared(std::static_pointer_cast<MyBase>(*asVoid));
+  collector_MyBase.insert(self);
+  mexLock();
   *reinterpret_cast<Shared**>(mxGetData(out[0])) = self;
 }
 
@@ -132,10 +134,12 @@ void MyBase_deconstructor_2(int nargout, mxArray *out[], int nargin, const mxArr
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_MyBase::iterator item;
   item = collector_MyBase.find(self);
-  if(item != collector_MyBase.end()) {
-    collector_MyBase.erase(item);
+  if(item == collector_MyBase.end()) {
+    return;
   }
+  collector_MyBase.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void MyTemplatePoint2_collectorInsertAndMakeBase_3(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -149,6 +153,7 @@ void MyTemplatePoint2_collectorInsertAndMakeBase_3(int nargout, mxArray *out[], 
   typedef std::shared_ptr<MyBase> SharedBase;
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<SharedBase**>(mxGetData(out[0])) = new SharedBase(*self);
+  mexLock();
 }
 
 void MyTemplatePoint2_upcastFromVoid_4(int nargout, mxArray *out[], int nargin, const mxArray *in[]) {
@@ -157,6 +162,8 @@ void MyTemplatePoint2_upcastFromVoid_4(int nargout, mxArray *out[], int nargin, 
   std::shared_ptr<void> *asVoid = *reinterpret_cast<std::shared_ptr<void>**> (mxGetData(in[0]));
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   Shared *self = new Shared(std::static_pointer_cast<MyTemplate<gtsam::Point2>>(*asVoid));
+  collector_MyTemplatePoint2.insert(self);
+  mexLock();
   *reinterpret_cast<Shared**>(mxGetData(out[0])) = self;
 }
 
@@ -167,12 +174,14 @@ void MyTemplatePoint2_constructor_5(int nargout, mxArray *out[], int nargin, con
 
   Shared *self = new Shared(new MyTemplate<gtsam::Point2>());
   collector_MyTemplatePoint2.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 
   typedef std::shared_ptr<MyBase> SharedBase;
   out[1] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<SharedBase**>(mxGetData(out[1])) = new SharedBase(*self);
+  mexLock();
 }
 
 void MyTemplatePoint2_deconstructor_6(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -182,10 +191,12 @@ void MyTemplatePoint2_deconstructor_6(int nargout, mxArray *out[], int nargin, c
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_MyTemplatePoint2::iterator item;
   item = collector_MyTemplatePoint2.find(self);
-  if(item != collector_MyTemplatePoint2.end()) {
-    collector_MyTemplatePoint2.erase(item);
+  if(item == collector_MyTemplatePoint2.end()) {
+    return;
   }
+  collector_MyTemplatePoint2.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void MyTemplatePoint2_accept_T_7(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -317,6 +328,7 @@ void MyTemplateMatrix_collectorInsertAndMakeBase_19(int nargout, mxArray *out[],
   typedef std::shared_ptr<MyBase> SharedBase;
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<SharedBase**>(mxGetData(out[0])) = new SharedBase(*self);
+  mexLock();
 }
 
 void MyTemplateMatrix_upcastFromVoid_20(int nargout, mxArray *out[], int nargin, const mxArray *in[]) {
@@ -325,6 +337,8 @@ void MyTemplateMatrix_upcastFromVoid_20(int nargout, mxArray *out[], int nargin,
   std::shared_ptr<void> *asVoid = *reinterpret_cast<std::shared_ptr<void>**> (mxGetData(in[0]));
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   Shared *self = new Shared(std::static_pointer_cast<MyTemplate<gtsam::Matrix>>(*asVoid));
+  collector_MyTemplateMatrix.insert(self);
+  mexLock();
   *reinterpret_cast<Shared**>(mxGetData(out[0])) = self;
 }
 
@@ -335,12 +349,14 @@ void MyTemplateMatrix_constructor_21(int nargout, mxArray *out[], int nargin, co
 
   Shared *self = new Shared(new MyTemplate<gtsam::Matrix>());
   collector_MyTemplateMatrix.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 
   typedef std::shared_ptr<MyBase> SharedBase;
   out[1] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<SharedBase**>(mxGetData(out[1])) = new SharedBase(*self);
+  mexLock();
 }
 
 void MyTemplateMatrix_deconstructor_22(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -350,10 +366,12 @@ void MyTemplateMatrix_deconstructor_22(int nargout, mxArray *out[], int nargin, 
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_MyTemplateMatrix::iterator item;
   item = collector_MyTemplateMatrix.find(self);
-  if(item != collector_MyTemplateMatrix.end()) {
-    collector_MyTemplateMatrix.erase(item);
+  if(item == collector_MyTemplateMatrix.end()) {
+    return;
   }
+  collector_MyTemplateMatrix.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void MyTemplateMatrix_accept_T_23(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -485,6 +503,7 @@ void MyTemplateA_collectorInsertAndMakeBase_35(int nargout, mxArray *out[], int 
   typedef std::shared_ptr<MyBase> SharedBase;
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<SharedBase**>(mxGetData(out[0])) = new SharedBase(*self);
+  mexLock();
 }
 
 void MyTemplateA_upcastFromVoid_36(int nargout, mxArray *out[], int nargin, const mxArray *in[]) {
@@ -493,6 +512,8 @@ void MyTemplateA_upcastFromVoid_36(int nargout, mxArray *out[], int nargin, cons
   std::shared_ptr<void> *asVoid = *reinterpret_cast<std::shared_ptr<void>**> (mxGetData(in[0]));
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   Shared *self = new Shared(std::static_pointer_cast<MyTemplate<A>>(*asVoid));
+  collector_MyTemplateA.insert(self);
+  mexLock();
   *reinterpret_cast<Shared**>(mxGetData(out[0])) = self;
 }
 
@@ -503,12 +524,14 @@ void MyTemplateA_constructor_37(int nargout, mxArray *out[], int nargin, const m
 
   Shared *self = new Shared(new MyTemplate<A>());
   collector_MyTemplateA.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 
   typedef std::shared_ptr<MyBase> SharedBase;
   out[1] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<SharedBase**>(mxGetData(out[1])) = new SharedBase(*self);
+  mexLock();
 }
 
 void MyTemplateA_deconstructor_38(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -518,10 +541,12 @@ void MyTemplateA_deconstructor_38(int nargout, mxArray *out[], int nargin, const
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_MyTemplateA::iterator item;
   item = collector_MyTemplateA.find(self);
-  if(item != collector_MyTemplateA.end()) {
-    collector_MyTemplateA.erase(item);
+  if(item == collector_MyTemplateA.end()) {
+    return;
   }
+  collector_MyTemplateA.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void MyTemplateA_accept_T_39(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -635,6 +660,7 @@ void ForwardKinematicsFactor_collectorInsertAndMakeBase_51(int nargout, mxArray 
   typedef std::shared_ptr<gtsam::BetweenFactor<gtsam::Pose3>> SharedBase;
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<SharedBase**>(mxGetData(out[0])) = new SharedBase(*self);
+  mexLock();
 }
 
 void ForwardKinematicsFactor_upcastFromVoid_52(int nargout, mxArray *out[], int nargin, const mxArray *in[]) {
@@ -643,6 +669,8 @@ void ForwardKinematicsFactor_upcastFromVoid_52(int nargout, mxArray *out[], int 
   std::shared_ptr<void> *asVoid = *reinterpret_cast<std::shared_ptr<void>**> (mxGetData(in[0]));
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   Shared *self = new Shared(std::static_pointer_cast<ForwardKinematicsFactor>(*asVoid));
+  collector_ForwardKinematicsFactor.insert(self);
+  mexLock();
   *reinterpret_cast<Shared**>(mxGetData(out[0])) = self;
 }
 
@@ -653,10 +681,12 @@ void ForwardKinematicsFactor_deconstructor_53(int nargout, mxArray *out[], int n
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_ForwardKinematicsFactor::iterator item;
   item = collector_ForwardKinematicsFactor.find(self);
-  if(item != collector_ForwardKinematicsFactor.end()) {
-    collector_ForwardKinematicsFactor.erase(item);
+  if(item == collector_ForwardKinematicsFactor.end()) {
+    return;
   }
+  collector_ForwardKinematicsFactor.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void ParentHasTemplateDouble_collectorInsertAndMakeBase_54(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -670,6 +700,7 @@ void ParentHasTemplateDouble_collectorInsertAndMakeBase_54(int nargout, mxArray 
   typedef std::shared_ptr<MyTemplate<double>> SharedBase;
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<SharedBase**>(mxGetData(out[0])) = new SharedBase(*self);
+  mexLock();
 }
 
 void ParentHasTemplateDouble_upcastFromVoid_55(int nargout, mxArray *out[], int nargin, const mxArray *in[]) {
@@ -678,6 +709,8 @@ void ParentHasTemplateDouble_upcastFromVoid_55(int nargout, mxArray *out[], int 
   std::shared_ptr<void> *asVoid = *reinterpret_cast<std::shared_ptr<void>**> (mxGetData(in[0]));
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   Shared *self = new Shared(std::static_pointer_cast<ParentHasTemplate<double>>(*asVoid));
+  collector_ParentHasTemplateDouble.insert(self);
+  mexLock();
   *reinterpret_cast<Shared**>(mxGetData(out[0])) = self;
 }
 
@@ -688,10 +721,12 @@ void ParentHasTemplateDouble_deconstructor_56(int nargout, mxArray *out[], int n
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_ParentHasTemplateDouble::iterator item;
   item = collector_ParentHasTemplateDouble.find(self);
-  if(item != collector_ParentHasTemplateDouble.end()) {
-    collector_ParentHasTemplateDouble.erase(item);
+  if(item == collector_ParentHasTemplateDouble.end()) {
+    return;
   }
+  collector_ParentHasTemplateDouble.erase(item);
   delete self;
+  mexUnlock();
 }
 
 

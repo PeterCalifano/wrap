@@ -82,6 +82,7 @@ void TemplatedConstructor_constructor_1(int nargout, mxArray *out[], int nargin,
 
   Shared *self = new Shared(new TemplatedConstructor());
   collector_TemplatedConstructor.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -94,6 +95,7 @@ void TemplatedConstructor_constructor_2(int nargout, mxArray *out[], int nargin,
   string arg = unwrap< string >(in[0]);
   Shared *self = new Shared(new TemplatedConstructor(arg));
   collector_TemplatedConstructor.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -106,6 +108,7 @@ void TemplatedConstructor_constructor_3(int nargout, mxArray *out[], int nargin,
   int arg = unwrap< int >(in[0]);
   Shared *self = new Shared(new TemplatedConstructor(arg));
   collector_TemplatedConstructor.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -118,6 +121,7 @@ void TemplatedConstructor_constructor_4(int nargout, mxArray *out[], int nargin,
   double arg = unwrap< double >(in[0]);
   Shared *self = new Shared(new TemplatedConstructor(arg));
   collector_TemplatedConstructor.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -129,10 +133,12 @@ void TemplatedConstructor_deconstructor_5(int nargout, mxArray *out[], int nargi
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_TemplatedConstructor::iterator item;
   item = collector_TemplatedConstructor.find(self);
-  if(item != collector_TemplatedConstructor.end()) {
-    collector_TemplatedConstructor.erase(item);
+  if(item == collector_TemplatedConstructor.end()) {
+    return;
   }
+  collector_TemplatedConstructor.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void ScopedTemplateResult_collectorInsertAndMakeBase_6(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -152,6 +158,7 @@ void ScopedTemplateResult_constructor_7(int nargout, mxArray *out[], int nargin,
   Result::Value& arg = *unwrap_shared_ptr< Result::Value >(in[0], "ptr_Result::Value");
   Shared *self = new Shared(new ScopedTemplate<Result>(arg));
   collector_ScopedTemplateResult.insert(self);
+  mexLock();
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<Shared**> (mxGetData(out[0])) = self;
 }
@@ -163,10 +170,12 @@ void ScopedTemplateResult_deconstructor_8(int nargout, mxArray *out[], int nargi
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_ScopedTemplateResult::iterator item;
   item = collector_ScopedTemplateResult.find(self);
-  if(item != collector_ScopedTemplateResult.end()) {
-    collector_ScopedTemplateResult.erase(item);
+  if(item == collector_ScopedTemplateResult.end()) {
+    return;
   }
+  collector_ScopedTemplateResult.erase(item);
   delete self;
+  mexUnlock();
 }
 
 
