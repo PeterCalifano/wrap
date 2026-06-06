@@ -1,6 +1,7 @@
 __pycache__/
 .vscode/
 *build*
+!tests/test_matlab_runtime_build.py
 *install*
 *dist*
 *.egg-info
