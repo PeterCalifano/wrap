@@ -278,6 +278,8 @@ pybind11::arg py_arg(const char* name) {
         return_ref = getattr(return_type, 'is_ref', False)
         return_const = getattr(return_type, 'is_const', False)
 
+        # For methods returning const T&, use reference_internal policy
+        # to avoid unnecessary copies and keep the returned reference alive.
         if return_ref and return_const and is_method:
             lambda_ret = ' -> const auto&'
             ref_policy = ', py::return_value_policy::reference_internal'

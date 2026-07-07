@@ -195,7 +195,16 @@ PYBIND11_MODULE({module_name}, m_) {{
         self.assertIn('gtwrap::internal::py_arg<int>("count") = 1', content)
 
     def test_const_ref_return_policy(self):
-        """Test that only const-ref method returns emit reference_internal."""
+        """Test that methods returning const T& emit reference_internal policy.
+
+        Without this policy, pybind11 defaults to copying the returned reference.
+        With the policy, the binding keeps the reference alive via the parent object.
+
+        Expected emitted code difference:
+          Before: [](Cls* self, ...){return self->method(...);}, py::arg(...))
+          After:  [](Cls* self, ...) -> const auto&{return self->method(...);},
+                  py::return_value_policy::reference_internal, py::arg(...))
+        """
         source = osp.join(self.INTERFACE_DIR, 'class.i')
         output = self.wrap_content([source], 'class_py',
                                    self.PYTHON_ACTUAL_DIR)

@@ -1359,10 +1359,15 @@ class MatlabWrapper(CheckMixin, FormatMixin):
                 return_type_text = self.wrap_collector_function_shared_return(
                     return_type.typename, shared_obj, func_id, func_id == 0)
             else:
-                return_type_text += 'wrap_shared_ptr({ctx}{0},"{1}", false);{new_line}' \
+                is_virtual = any(
+                    cls.name == return_type.typename.name and cls.is_virtual
+                    for cls in self.classes
+                )
+                return_type_text += 'wrap_shared_ptr({ctx}{0},"{1}", {2});{new_line}' \
                     .format(shared_obj,
                             self._format_type_name(return_type.typename,
                                                    separator='.'),
+                            'true' if is_virtual else 'false',
                             ctx=self._ctx_arg(),
                             new_line=new_line)
         else:
@@ -1430,9 +1435,14 @@ class MatlabWrapper(CheckMixin, FormatMixin):
                             obj=obj)
 
             if ctype.typename.name not in self.ignore_namespace:
+                is_virtual = any(
+                    cls.name == ctype.typename.name and cls.is_virtual
+                    for cls in self.classes
+                )
                 expanded += textwrap.indent(
-                    'out[0] = wrap_shared_ptr({ctx}{0}, false);'.format(
-                        shared_obj, ctx=self._ctx_arg()),
+                    'out[0] = wrap_shared_ptr({ctx}{0}, {1});'.format(
+                        shared_obj, 'true' if is_virtual else 'false',
+                        ctx=self._ctx_arg()),
                     prefix='  ')
         else:
             expanded += '  out[0] = wrap< {0} >({1});'.format(
@@ -1874,8 +1884,9 @@ class MatlabWrapper(CheckMixin, FormatMixin):
 
             if cls.is_virtual:
                 class_name, class_name_sep = self.get_class_name(cls)
+                matlab_class_name = self._format_class_name(cls, separator='.')
                 rtti_classes += '    types.insert(std::make_pair(typeid({}).name(), "{}"));\n' \
-                    .format(class_name_sep, class_name)
+                    .format(class_name_sep, matlab_class_name)
 
         # Generate the typedef instances string
         typedef_instances = "\n".join(typedef_instances)
