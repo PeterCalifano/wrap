@@ -762,6 +762,8 @@ void Base_upcastFromVoid_58(int nargout, mxArray *out[], int nargin, const mxArr
   std::shared_ptr<void> *asVoid = *reinterpret_cast<std::shared_ptr<void>**> (mxGetData(in[0]));
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   Shared *self = new Shared(std::static_pointer_cast<Base>(*asVoid));
+  collector_Base.insert(self);
+  mexLock();
   *reinterpret_cast<Shared**>(mxGetData(out[0])) = self;
 }
 
@@ -772,10 +774,12 @@ void Base_deconstructor_59(int nargout, mxArray *out[], int nargin, const mxArra
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_Base::iterator item;
   item = collector_Base.find(self);
-  if(item != collector_Base.end()) {
-    collector_Base.erase(item);
+  if(item == collector_Base.end()) {
+    return;
   }
+  collector_Base.erase(item);
   delete self;
+  mexUnlock();
 }
 
 void Base_Create_60(int nargout, mxArray *out[], int nargin, const mxArray *in[])
@@ -796,6 +800,7 @@ void Derived_collectorInsertAndMakeBase_61(int nargout, mxArray *out[], int narg
   typedef std::shared_ptr<Base> SharedBase;
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   *reinterpret_cast<SharedBase**>(mxGetData(out[0])) = new SharedBase(*self);
+  mexLock();
 }
 
 void Derived_upcastFromVoid_62(int nargout, mxArray *out[], int nargin, const mxArray *in[]) {
@@ -804,6 +809,8 @@ void Derived_upcastFromVoid_62(int nargout, mxArray *out[], int nargin, const mx
   std::shared_ptr<void> *asVoid = *reinterpret_cast<std::shared_ptr<void>**> (mxGetData(in[0]));
   out[0] = mxCreateNumericMatrix(1, 1, mxUINT32OR64_CLASS, mxREAL);
   Shared *self = new Shared(std::static_pointer_cast<Derived>(*asVoid));
+  collector_Derived.insert(self);
+  mexLock();
   *reinterpret_cast<Shared**>(mxGetData(out[0])) = self;
 }
 
@@ -814,10 +821,12 @@ void Derived_deconstructor_63(int nargout, mxArray *out[], int nargin, const mxA
   Shared *self = *reinterpret_cast<Shared**>(mxGetData(in[0]));
   Collector_Derived::iterator item;
   item = collector_Derived.find(self);
-  if(item != collector_Derived.end()) {
-    collector_Derived.erase(item);
+  if(item == collector_Derived.end()) {
+    return;
   }
+  collector_Derived.erase(item);
   delete self;
+  mexUnlock();
 }
 
 

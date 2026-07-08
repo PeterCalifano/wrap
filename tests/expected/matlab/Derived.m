@@ -1,5 +1,4 @@
-%class Derived, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class Derived, generated wrapper class
 %
 classdef Derived < Base
   properties

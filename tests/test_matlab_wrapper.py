@@ -5,8 +5,6 @@ Date: March 2019
 """
 # pylint: disable=import-error, wrong-import-position
 
-from gtwrap.matlab_wrapper import MatlabWrapper
-from gtwrap.matlab_wrapper import wrapper as matlab_wrapper_module
 import filecmp
 import os
 import os.path as osp

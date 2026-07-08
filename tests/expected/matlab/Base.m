@@ -1,5 +1,4 @@
-%class Base, see Doxygen page for details
-%at https://gtsam.org/doxygen/
+%class Base, generated wrapper class
 %
 %-------Static Methods-------
 %Create(double x) : returns gtsam::Base
@@ -40,7 +39,7 @@ classdef Base < handle
   methods(Static = true)
     function varargout = Create(varargin)
       % CREATE usage: Create(double x) : returns gtsam.Base
-      % Doxygen can be found at https://gtsam.org/doxygen/
+      % Documentation can be found in the wrapped project.
       if length(varargin) == 1 && isa(varargin{1},'double')
         varargout{1} = inheritance_wrapper(60, varargin{:});
         return
