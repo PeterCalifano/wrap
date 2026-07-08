@@ -13,7 +13,9 @@ Author: Varun Agrawal
 # pylint: disable=import-error,wrong-import-position
 
 import os
+import subprocess
 import sys
+import tempfile
 import unittest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -31,6 +33,10 @@ from gtwrap.template_instantiator.classes import InstantiatedClass
 
 class TestInterfaceParser(unittest.TestCase):
     """Test driver for all classes in interface_parser.py."""
+    INVALID_INTERFACE = """class Good {
+};
+void bad(;
+"""
 
     def test_typename(self):
         """Test parsing of Typename."""
@@ -672,6 +678,84 @@ class TestInterfaceParser(unittest.TestCase):
                          [x.name for x in module.content])
         self.assertEqual(["two", "two_dummy", "two", "oneVar"],
                          [x.name for x in module.content[0].content])
+
+    def test_module_parse_error_reports_source_location(self):
+        """Invalid interface syntax reports source, line, column, and caret."""
+        with self.assertRaises(ValueError) as cm:
+            Module.parseString(self.INVALID_INTERFACE,
+                               source_name="invalid_interface.i")
+
+        message = str(cm.exception)
+        self.assertIn("invalid_interface.i", message)
+        self.assertIn("line 3, column", message)
+        self.assertIn("void bad(;", message)
+        self.assertIn("^", message)
+
+    def test_pybind_cli_reports_parse_error_without_traceback(self):
+        """Pybind CLI prints a concise interface parse diagnostic."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            invalid = os.path.join(temp_dir, "invalid_pybind.i")
+            output = os.path.join(temp_dir, "invalid_pybind.cpp")
+            with open(invalid, "w", encoding="UTF-8") as file:
+                file.write(self.INVALID_INTERFACE)
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    os.path.join(os.getcwd(), "scripts", "pybind_wrap.py"),
+                    "--src",
+                    invalid,
+                    "--module_name",
+                    "invalid_pybind",
+                    "--out",
+                    output,
+                    "--template",
+                    os.path.join(os.getcwd(), "tests", "pybind_wrapper.tpl"),
+                ],
+                cwd=os.getcwd(),
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("invalid_pybind.i", result.stderr)
+        self.assertIn("line 3, column", result.stderr)
+        self.assertIn("void bad(;", result.stderr)
+        self.assertIn("^", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
+    def test_matlab_cli_reports_parse_error_without_traceback(self):
+        """MATLAB CLI prints a concise interface parse diagnostic."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            invalid = os.path.join(temp_dir, "invalid_matlab.i")
+            output_dir = os.path.join(temp_dir, "matlab_out")
+            with open(invalid, "w", encoding="UTF-8") as file:
+                file.write(self.INVALID_INTERFACE)
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    os.path.join(os.getcwd(), "scripts", "matlab_wrap.py"),
+                    "--src",
+                    invalid,
+                    "--module_name",
+                    "invalid_matlab",
+                    "--out",
+                    output_dir,
+                ],
+                cwd=os.getcwd(),
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("invalid_matlab.i", result.stderr)
+        self.assertIn("line 3, column", result.stderr)
+        self.assertIn("void bad(;", result.stderr)
+        self.assertIn("^", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
 
 
 if __name__ == '__main__':

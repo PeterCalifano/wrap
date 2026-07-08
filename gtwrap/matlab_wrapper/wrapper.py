@@ -2067,12 +2067,17 @@ class MatlabWrapper(CheckMixin, FormatMixin):
         """High level function to wrap the project."""
         content = ""
         modules = {}
+        source_names = []
         for file in files:
+            source_names.append(file)
             with open(file, 'r') as f:
                 content += f.read()
 
         # Parse the contents of the interface file
-        parsed_result = parser.Module.parseString(content)
+        source_name = source_names[0] if len(source_names) == 1 \
+            else ";".join(source_names)
+        parsed_result = parser.Module.parseString(content,
+                                                  source_name=source_name)
 
         # Instantiate the module
         module = instantiator.instantiate_namespace(parsed_result)

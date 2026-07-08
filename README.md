@@ -50,6 +50,14 @@ For more information, please follow our [tutorial](https://github.com/borglab/gt
 
 Documentation for wrapping C++ code can be found [here](https://github.com/borglab/wrap/blob/master/DOCS.md).
 
+## Debugging Interface Parse Errors
+
+When an interface `.i` or `.h` file cannot be parsed, the Python and MATLAB
+wrapper scripts report the source file, line, column, offending line, and a
+caret. Start from that line in the interface file before debugging generated
+wrapper code; the generated `.cpp` files reflect the parsed interface and are
+not the source of truth.
+
 ## Python Wrapper
 
 **WARNING: On macOS, you have to statically build GTSAM to use the wrapper.**

@@ -6,11 +6,17 @@ and invoked during the wrapping by CMake.
 """
 
 import argparse
+import os
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from gtwrap.interface_parser.module import InterfaceParseError
 from gtwrap.matlab_wrapper import MatlabWrapper, MatlabWrapperCpp
 
-if __name__ == "__main__":
+
+def main(argv=None):
+    """Main runner."""
     arg_parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     arg_parser.add_argument("--src",
@@ -56,7 +62,7 @@ if __name__ == "__main__":
         help="MEX API to target: 'c' (legacy mex.h) or 'cpp' "
         "(modern matlab::mex C++ API).",
     )
-    args = arg_parser.parse_args()
+    args = arg_parser.parse_args(argv)
 
     top_module_namespaces = args.top_module_namespaces.split("::")
     if top_module_namespaces[0]:
@@ -72,4 +78,14 @@ if __name__ == "__main__":
         use_boost_serialization=args.use_boost_serialization)
 
     sources = args.src.split(';')
-    cc_content = wrapper.wrap(sources, path=args.out)
+    try:
+        wrapper.wrap(sources, path=args.out)
+    except InterfaceParseError as error:
+        print(error, file=sys.stderr)
+        return 1
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
