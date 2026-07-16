@@ -30,9 +30,10 @@ class CheckMixin:
         "Key",  # This is an alias for a uint64_t
     ) + fixed_width_integer_types
     # Ignore the namespace for these datatypes
-    ignore_namespace: tuple = ('Matrix', 'Vector', 'Point2', 'Point3')
+    ignore_namespace: tuple[str, ...] = ('Matrix', 'Vector', 'Point2',
+                                         'Point3')
     # Matrix-like view types that can alias MATLAB double matrix storage.
-    matrix_view_types: tuple = ('ConstMatrixView', )
+    matrix_view_types: tuple[str, ...] = ('ConstMatrixView', )
     # Methods that should be ignored
     ignore_methods: tuple = ('pickle', )
     # Methods that should not be wrapped directly

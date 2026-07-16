@@ -20,6 +20,10 @@ typedef std::set<std::shared_ptr<ForwardKinematicsFactor>*> Collector_ForwardKin
 static Collector_ForwardKinematicsFactor collector_ForwardKinematicsFactor;
 typedef std::set<std::shared_ptr<ParentHasTemplateDouble>*> Collector_ParentHasTemplateDouble;
 static Collector_ParentHasTemplateDouble collector_ParentHasTemplateDouble;
+typedef std::set<std::shared_ptr<Base>*> Collector_Base;
+static Collector_Base collector_Base;
+typedef std::set<std::shared_ptr<Derived>*> Collector_Derived;
+static Collector_Derived collector_Derived;
 
 
 void _deleteAllObjects(matlab::engine::MATLABEngine* engine)
@@ -61,6 +65,18 @@ void _deleteAllObjects(matlab::engine::MATLABEngine* engine)
     collector_ParentHasTemplateDouble.erase(iter++);
     anyDeleted = true;
   } }
+  { for(Collector_Base::iterator iter = collector_Base.begin();
+      iter != collector_Base.end(); ) {
+    delete *iter;
+    collector_Base.erase(iter++);
+    anyDeleted = true;
+  } }
+  { for(Collector_Derived::iterator iter = collector_Derived.begin();
+      iter != collector_Derived.end(); ) {
+    delete *iter;
+    collector_Derived.erase(iter++);
+    anyDeleted = true;
+  } }
 
   if(anyDeleted) {
     matlab::data::ArrayFactory f_;
@@ -91,6 +107,8 @@ void _inheritance_RTTIRegister(matlab::engine::MATLABEngine* engine) {
     types.insert(std::make_pair(typeid(MyTemplateA).name(), "MyTemplateA"));
     types.insert(std::make_pair(typeid(ForwardKinematicsFactor).name(), "ForwardKinematicsFactor"));
     types.insert(std::make_pair(typeid(ParentHasTemplateDouble).name(), "ParentHasTemplateDouble"));
+    types.insert(std::make_pair(typeid(Base).name(), "Base"));
+    types.insert(std::make_pair(typeid(Derived).name(), "Derived"));
 
     matlab::data::ArrayFactory f_;
     try {
@@ -683,6 +701,76 @@ void ParentHasTemplateDouble_deconstructor_56(Context& ctx, int nargout, OutputL
   delete self;
 }
 
+void Base_collectorInsertAndMakeBase_57(Context& ctx, int nargout, OutputList& out, int nargin, WrapIn in)
+{
+  typedef std::shared_ptr<Base> Shared;
+
+  Shared *self = get_handle<Shared>(in[0]);
+  collector_Base.insert(self);
+}
+
+void Base_upcastFromVoid_58(Context& ctx, int nargout, OutputList& out, int nargin, WrapIn in) {
+  typedef std::shared_ptr<Base> Shared;
+  std::shared_ptr<void> *asVoid = get_handle<std::shared_ptr<void>>(in[0]);
+  Shared *self = new Shared(std::static_pointer_cast<Base>(*asVoid));
+  collector_Base.insert(self);
+  out[0] = make_handle<Shared>(self);
+}
+
+void Base_deconstructor_59(Context& ctx, int nargout, OutputList& out, int nargin, WrapIn in)
+{
+  typedef std::shared_ptr<Base> Shared;
+  checkArguments("delete_Base",nargout,nargin,1);
+  Shared *self = get_handle<Shared>(in[0]);
+  Collector_Base::iterator item;
+  item = collector_Base.find(self);
+  if(item == collector_Base.end()) {
+    return;
+  }
+  collector_Base.erase(item);
+  delete self;
+}
+
+void Base_Create_60(Context& ctx, int nargout, OutputList& out, int nargin, WrapIn in)
+{
+  checkArguments("Base.Create",nargout,nargin,1);
+  double x = unwrap< double >(in[0]);
+  out[0] = wrap_shared_ptr(ctx, Base::Create(x),"gtsam.Base", true);
+}
+
+void Derived_collectorInsertAndMakeBase_61(Context& ctx, int nargout, OutputList& out, int nargin, WrapIn in)
+{
+  typedef std::shared_ptr<Derived> Shared;
+
+  Shared *self = get_handle<Shared>(in[0]);
+  collector_Derived.insert(self);
+
+  typedef std::shared_ptr<Base> SharedBase;
+  out[0] = make_handle<SharedBase>(new SharedBase(*self));
+}
+
+void Derived_upcastFromVoid_62(Context& ctx, int nargout, OutputList& out, int nargin, WrapIn in) {
+  typedef std::shared_ptr<Derived> Shared;
+  std::shared_ptr<void> *asVoid = get_handle<std::shared_ptr<void>>(in[0]);
+  Shared *self = new Shared(std::static_pointer_cast<Derived>(*asVoid));
+  collector_Derived.insert(self);
+  out[0] = make_handle<Shared>(self);
+}
+
+void Derived_deconstructor_63(Context& ctx, int nargout, OutputList& out, int nargin, WrapIn in)
+{
+  typedef std::shared_ptr<Derived> Shared;
+  checkArguments("delete_Derived",nargout,nargin,1);
+  Shared *self = get_handle<Shared>(in[0]);
+  Collector_Derived::iterator item;
+  item = collector_Derived.find(self);
+  if(item == collector_Derived.end()) {
+    return;
+  }
+  collector_Derived.erase(item);
+  delete self;
+}
+
 
 class MexFunction : public matlab::mex::Function {
  public:
@@ -887,6 +975,27 @@ class MexFunction : public matlab::mex::Function {
           break;
         case 56:
           ParentHasTemplateDouble_deconstructor_56(ctx, (int)outputs.size(), out, (int)in.size(), in);
+          break;
+        case 57:
+          Base_collectorInsertAndMakeBase_57(ctx, (int)outputs.size(), out, (int)in.size(), in);
+          break;
+        case 58:
+          Base_upcastFromVoid_58(ctx, (int)outputs.size(), out, (int)in.size(), in);
+          break;
+        case 59:
+          Base_deconstructor_59(ctx, (int)outputs.size(), out, (int)in.size(), in);
+          break;
+        case 60:
+          Base_Create_60(ctx, (int)outputs.size(), out, (int)in.size(), in);
+          break;
+        case 61:
+          Derived_collectorInsertAndMakeBase_61(ctx, (int)outputs.size(), out, (int)in.size(), in);
+          break;
+        case 62:
+          Derived_upcastFromVoid_62(ctx, (int)outputs.size(), out, (int)in.size(), in);
+          break;
+        case 63:
+          Derived_deconstructor_63(ctx, (int)outputs.size(), out, (int)in.size(), in);
           break;
       }
     } catch(const matlab::engine::MATLABException&) {
