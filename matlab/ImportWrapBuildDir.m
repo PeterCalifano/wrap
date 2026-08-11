@@ -13,7 +13,8 @@ end
 %% DESCRIPTION
 % Function automating the addpath and import operations for C and C++ libraries wrapped using GTwrap
 % library. Default values of inputs assume use in nav-backend repository. It supports recursive import of
-% package folders within other packages.
+% package folders within other packages and resolves wrapper folders from the
+% explicitly supplied namespace before applying compatibility heuristics.
 % -------------------------------------------------------------------------------------------------------------
 %% INPUT
 % cellBuildFolders             (1,:) {mustBeA(cellBuildFolders, ["cell", "string"])}     = {"../gtsam/build", "../lib/gtsam_spaceNav/build"}
@@ -26,6 +27,7 @@ end
 % 01-02-2025    Pietro Califano     Function implementation, assuming imported builds uses GTwrap library
 % 07-08-2025    Pietro Califano     Improve automatic build dir import function
 % 14-12-2025    Pietro Califano     Extend build/wrap folder detection implementation
+% 29-07-2026    Pietro Califano, Codex     Prefer namespace folders and omit unpopulated return paths
 % -------------------------------------------------------------------------------------------------------------
 %% DEPENDENCIES
 % [-]
@@ -94,17 +96,36 @@ for idPath = 1:ui32NumOfPathsToAdd
         % Remove empty parts (which can occur with trailing file separators)
         charPathParts = charPathParts(~cellfun('isempty', charPathParts));
 
-        % Find the folder name that contains the name of the library and not "mex"
+        % Retain the repository name as the conventional compatibility
+        % candidate when no supplied namespace folder is available.
         cellLibraryName{idPath} = charPathParts{end-1};
+        bFound = false;
 
-        if ~isfolder(fullfile(charBuildFolder, "wrap", cellLibraryName{idPath}))
-            % Library may have different name. Check if a folder matches the name in some part
+        % Prefer the declared namespace because it is explicit caller intent
+        % and may intentionally differ from the repository name.
+        if idPath <= ui32NumOfLibsToImport
+            charImportNamespace = char(string(cellImportNamespaces{idPath}));
+            cellNamespaceParts = strsplit(charImportNamespace, '.');
+            charNamespaceRoot = cellNamespaceParts{1};
+            charNamespaceWrapper = fullfile(charBuildFolder, "wrap", charNamespaceRoot);
 
+            if isfolder(charNamespaceWrapper) && ~endsWith(charNamespaceRoot, "_mex")
+                cellLibraryName{idPath} = charNamespaceRoot;
+                bFound = true;
+            end
+        end
+
+        % Fall back to the established repository-name convention.
+        if ~bFound && isfolder(fullfile(charBuildFolder, "wrap", cellLibraryName{idPath}))
+            bFound = true;
+        end
+
+        if ~bFound
+            % Library may have a legacy generated name. Retain the existing
+            % fuzzy and unique-wrapper discovery rules as final fallbacks.
             strDirStruct = dir(fullfile(charBuildFolder, "wrap"));
             charIsValidDir = [strDirStruct.isdir] & ~ismember({strDirStruct.name},{'.','..'});
             strDirStruct = strDirStruct(charIsValidDir);
-
-            bFound = false;
 
             % "contains" heuristic (excluding *_mex*)
             for ui32DirID = 1:numel(strDirStruct)
@@ -155,7 +176,7 @@ for idPath = 1:ui32NumOfPathsToAdd
         cellWrap{idPath}    = fullfile(charBuildFolder, "wrap", cellLibraryName{idPath});
 
         if kwargs.bVerbose
-            fprintf('         repo: %s\n', cellLibraryName{idPath});
+            fprintf('         wrapper: %s\n', cellLibraryName{idPath});
         end
 
         % Search for a target path ending in mex
@@ -195,7 +216,9 @@ for idPath = 1:ui32NumOfPathsToAdd
     end
 end
 
-% Define char list of added paths wiht ; delimiter 
+% Report only paths that were actually added. Optional wrapper folders can be
+% absent even when their corresponding MEX directory exists.
+cellAddedPaths = cellAddedPaths(1:idAddCount);
 charAddedPaths = strjoin(string(cellAddedPaths),';');
 
 % Iterare over import namespaces to import them (make sure there are no conflicting definitions!)
